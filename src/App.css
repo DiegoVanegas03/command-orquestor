@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+@theme {
+  /* Colors */
+  --color-bright-snow: #f8f9fa;
+  --color-bright-snow-100: #29323a;
+  --color-bright-snow-200: #536475;
+  --color-bright-snow-300: #8496a8;
+  --color-bright-snow-400: #bfc8d1;
+  --color-bright-snow-500: #f8f9fa;
+  --color-bright-snow-600: #fafbfc;
+  --color-bright-snow-700: #fbfcfc;
+  --color-bright-snow-800: #fdfdfd;
+  --color-bright-snow-900: #fefefe;
+
+  --color-platinum: #e9ecef;
+  --color-platinum-100: #282f37;
+  --color-platinum-200: #505f6e;
+  --color-platinum-300: #7c8ea0;
+  --color-platinum-400: #b3bec8;
+  --color-platinum-500: #e9ecef;
+  --color-platinum-600: #eef1f3;
+  --color-platinum-700: #f3f4f6;
+  --color-platinum-800: #f7f8f9;
+  --color-platinum-900: #fbfbfc;
+
+  --color-alabaster-grey: #dee2e6;
+  --color-alabaster-grey-100: #272d34;
+  --color-alabaster-grey-200: #4e5b67;
+  --color-alabaster-grey-300: #788899;
+  --color-alabaster-grey-400: #abb6c0;
+  --color-alabaster-grey-500: #dee2e6;
+  --color-alabaster-grey-600: #e5e9ec;
+  --color-alabaster-grey-700: #eceef1;
+  --color-alabaster-grey-800: #f2f4f5;
+  --color-alabaster-grey-900: #f9f9fa;
+
+  --color-pale-slate-light: #ced4da;
+  --color-pale-slate-light-100: #242a30;
+  --color-pale-slate-light-200: #495561;
+  --color-pale-slate-light-300: #6d7f91;
+  --color-pale-slate-light-400: #9da9b5;
+  --color-pale-slate-light-500: #ced4da;
+  --color-pale-slate-light-600: #d7dce1;
+  --color-pale-slate-light-700: #e1e5e9;
+  --color-pale-slate-light-800: #ebeef0;
+  --color-pale-slate-light-900: #f5f6f8;
+
+  --color-pale-slate: #adb5bd;
+  --color-pale-slate-100: #202428;
+  --color-pale-slate-200: #404850;
+  --color-pale-slate-300: #616d79;
+  --color-pale-slate-400: #85919d;
+  --color-pale-slate-500: #adb5bd;
+  --color-pale-slate-600: #bdc4ca;
+  --color-pale-slate-700: #ced3d8;
+  --color-pale-slate-800: #dee1e5;
+  --color-pale-slate-900: #eff0f2;
+
+  --color-slate-grey: #6c757d;
+  --color-slate-grey-100: #161819;
+  --color-slate-grey-200: #2c2f32;
+  --color-slate-grey-300: #41474b;
+  --color-slate-grey-400: #575e64;
+  --color-slate-grey-500: #6c757d;
+  --color-slate-grey-600: #899199;
+  --color-slate-grey-700: #a7adb2;
+  --color-slate-grey-800: #c4c8cc;
+  --color-slate-grey-900: #e2e4e5;
+
+  --color-iron-grey: #495057;
+  --color-iron-grey-100: #0e1011;
+  --color-iron-grey-200: #1d2022;
+  --color-iron-grey-300: #2b2f34;
+  --color-iron-grey-400: #3a3f45;
+  --color-iron-grey-500: #495057;
+  --color-iron-grey-600: #68727d;
+  --color-iron-grey-700: #8c959f;
+  --color-iron-grey-800: #b2b9bf;
+  --color-iron-grey-900: #d9dcdf;
+
+  --color-gunmetal: #343a40;
+  --color-gunmetal-100: #0b0c0d;
+  --color-gunmetal-200: #15171a;
+  --color-gunmetal-300: #202327;
+  --color-gunmetal-400: #2a2f34;
+  --color-gunmetal-500: #343a40;
+  --color-gunmetal-600: #58626c;
+  --color-gunmetal-700: #7d8995;
+  --color-gunmetal-800: #a9b0b8;
+  --color-gunmetal-900: #d4d8dc;
+
+  --color-carbon-black: #212529;
+  --color-carbon-black-100: #070808;
+  --color-carbon-black-200: #0e0f11;
+  --color-carbon-black-300: #141719;
+  --color-carbon-black-400: #1b1f22;
+  --color-carbon-black-500: #212529;
+  --color-carbon-black-600: #49525b;
+  --color-carbon-black-700: #6f7d8b;
+  --color-carbon-black-800: #9fa8b2;
+  --color-carbon-black-900: #cfd4d8;
+
+  /* Typography */
+  --font-roboto: "Roboto", sans-serif;
+}
+
+@layer components {
+  .text-title-1 {
+    @apply font-roboto text-4xl leading-tight font-bold tracking-tight;
+  }
+  .text-title-2 {
+    @apply font-roboto text-3xl leading-snug font-bold tracking-tight;
+  }
+  .text-title-3 {
+    @apply font-roboto text-2xl leading-snug font-semibold;
+  }
+  .text-subtitle-1 {
+    @apply font-roboto text-xl leading-relaxed font-semibold;
+  }
+  .text-subtitle-2 {
+    @apply font-roboto text-lg leading-relaxed font-medium;
+  }
+  .text-body-lg {
+    @apply font-roboto text-base leading-relaxed font-normal;
+  }
+  .text-body-md {
+    @apply font-roboto text-sm leading-normal font-normal;
+  }
+  .text-caption {
+    @apply font-roboto text-xs leading-none font-light text-slate-grey;
+  }
+}
