@@ -94,12 +94,11 @@ En lugar de copiar/pegar, el sistema escribe por el usuario como si fuera entrad
 
 ```bash
 src/
+├── assets/
 ├── components/
 ├── hooks/
-├── pages/
 ├── routes/
-├── store/
-├── assets/
+├── stores/
 ├── App.tsx
 ├── main.tsx
 ```
