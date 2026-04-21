@@ -1,17 +1,48 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useState } from 'react'
+
 import ToggleButtonGroup from '@/components/shared/ToggleButtonGroup'
 import SpeedSlider from '@/components/shared/SpeedSlider'
 import CommandInput from '@/components/CommandInput'
 import ExecutionButton from '@/components/ExecutionButton'
-
-import { useState } from 'react'
+import { commandsService } from '@/services/commands'
 
 export const Route = createFileRoute('/')({
   component: Dashboard,
+  loader: async () => {
+    const history = await commandsService.getCommandHistory()
+    return { history }
+  },
 })
 
 function Dashboard() {
+  // Consumimos la información cargada de manera síncrona
+  const { history } = Route.useLoaderData()
+
   const [command, setCommand] = useState('')
+  const [enviroment, setEnviroment] = useState('production')
+  const [speed, setSpeed] = useState(50)
+
+  const handleCommandChange = (command: string) => {
+    setCommand(command)
+  }
+
+  const handleEnviromentChange = (enviroment: string) => {
+    setEnviroment(enviroment)
+  }
+
+  const handleSpeedChange = (speed: number) => {
+    setSpeed(speed)
+  }
+
+  const handleExecution = () => {
+    console.log('ejecutando:', command, 'enviroment:', enviroment, 'speed:', speed)
+  }
+
+  function handleClearConsole() {
+    console.log('clear console')
+  }
+
   return (
     <main className=" p-12 max-w-7xl mx-auto w-full flex flex-col gap-10">
       <div className="mb-2">
@@ -31,7 +62,7 @@ function Dashboard() {
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-bright-snow text-sm">terminal</span>
                 <span className="text-caption text-bright-snow font-bold uppercase tracking-widest">
-                  Salida en Vivo
+                  Output
                 </span>
               </div>
               <div className="flex gap-2">
@@ -75,7 +106,7 @@ function Dashboard() {
             {/* Prompt Input Area */}
             <CommandInput
               value={command}
-              onChange={setCommand}
+              onChange={handleCommandChange}
               placeholder="Introduce el comando de ejecución..."
             />
           </div>
@@ -83,7 +114,7 @@ function Dashboard() {
 
         {/* Right Area: Parameters Panel (col-span-4) */}
         <div className="lg:col-span-4 flex flex-col gap-6">
-          <div className="bg-carbon-black-200/80 backdrop-blur-md rounded-xl p-6 ring-1 ring-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
+          <div className="bg-carbon-black-200/80 min-h-[400px] flex flex-col backdrop-blur-md rounded-xl p-6 ring-1 ring-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
             <h3 className="text-caption text-bright-snow font-bold uppercase tracking-wider mb-6 flex items-center gap-2">
               <span className="material-symbols-outlined text-[16px]">tune</span>
               Parámetros
@@ -92,23 +123,27 @@ function Dashboard() {
             {/* Target Environment */}
             <div className="mb-8">
               <label className="block text-caption text-pale-slate uppercase tracking-wider mb-3">
-                Nodo Objetivo
+                Entorno de ejecución
               </label>
               <ToggleButtonGroup
                 options={[
                   { value: 'production', label: 'Producción', icon: 'public' },
                   { value: 'staging', label: 'Pruebas', icon: 'science' },
                 ]}
-                onChange={(val) => console.log('Ambiente seleccionado:', val)}
+                onChange={handleEnviromentChange}
               />
             </div>
 
-            <SpeedSlider onChange={(val) => console.log('Nueva velocidad:', val)} />
+            <div className="flex-1 items-center flex flex-row">
+              <p className="text-body-md text-pale-slate">
+                Ventana enlazada: <span className="text-bright-snow"> browser:promox </span>
+              </p>
+            </div>
+
+            <SpeedSlider onChange={handleSpeedChange} />
           </div>
 
-          <ExecutionButton 
-            onClick={() => console.log('Iniciando secuencia...')}
-          />
+          <ExecutionButton onClick={handleExecution} />
         </div>
       </div>
     </main>

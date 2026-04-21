@@ -1,6 +1,6 @@
 export default function TopNavBar() {
   return (
-    <header className="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 bg-carbon-black z-40 border-b border-white/5">
+    <header className="fixed top-0 right-0 w-full md:w-[calc(100%-16rem)] h-16 bg-carbon-black z-40 border-b border-white/5 transition-all duration-300">
       <div className="flex items-center justify-between px-12 h-full gap-6">
         <div className="flex-1"></div>
         <div className="flex items-center gap-6">

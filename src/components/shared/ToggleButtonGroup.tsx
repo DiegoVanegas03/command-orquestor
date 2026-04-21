@@ -30,14 +30,20 @@ export default function ToggleButtonGroup({ options, value, onChange }: ToggleBu
           <button
             key={option.value}
             onClick={() => handleSelect(option.value)}
-            className={`text-body-md py-3 rounded-lg transition-colors flex items-center justify-center gap-2 ${
+            className={`relative text-body-md transition-all   shadow-2xs flex items-center justify-center gap-2 py-2 rounded-lg overflow-hidden ${
               isActive
-                ? 'bg-carbon-black-400 text-bright-snow border-l-4 border-bright-snow shadow-sm hover:bg-carbon-black-600'
-                : 'bg-carbon-black-100 text-pale-slate hover:bg-carbon-black-300 opacity-70 border-l-4 border-transparent'
+                ? 'bg-carbon-black-400 text-bright-snow '
+                : 'text-pale-slate hover:bg-carbon-black-300'
             }`}
           >
+            {/* Indicador lateral */}
+            <div
+              className={`absolute left-0 top-0 bottom-0 w-[4px] transition-colors ${
+                isActive ? 'bg-bright-snow' : 'transparent'
+              }`}
+            />
             {option.icon && (
-              <span className="material-symbols-outlined text-[18px]">{option.icon}</span>
+              <span className="material-symbols-outlined text-lg">{option.icon}</span>
             )}
             {option.label}
           </button>

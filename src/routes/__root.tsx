@@ -14,12 +14,12 @@ function RootComponent() {
       <Sidebar />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full pl-64">
+      <div className="flex-1 flex flex-col h-full pl-0 md:pl-64 transition-all duration-300">
         {/* TopNavBar */}
         <TopNavBar />
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto pt-4">
+        <main className="flex-1 overflow-y-auto pt-4 relative">
           <Outlet />
         </main>
       </div>
