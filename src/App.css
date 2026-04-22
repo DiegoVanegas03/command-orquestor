@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   /* Colors */
@@ -102,7 +102,7 @@
   --color-carbon-black-900: #cfd4d8;
 
   /* Typography */
-  --font-roboto: "Roboto", sans-serif;
+  --font-roboto: 'Roboto', sans-serif;
 }
 
 @layer components {

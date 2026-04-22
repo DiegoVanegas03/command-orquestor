@@ -94,12 +94,11 @@ En lugar de copiar/pegar, el sistema escribe por el usuario como si fuera entrad
 
 ```bash
 src/
+├── assets/
 ├── components/
 ├── hooks/
-├── pages/
 ├── routes/
-├── store/
-├── assets/
+├── stores/
 ├── App.tsx
 ├── main.tsx
 ```
@@ -203,6 +202,19 @@ Estilo:
 - Importación y exportación de comandos
 - Soporte multi-ventana avanzado
 - Integración con APIs externas
+
+---
+
+# Permisos del Sistema (Troubleshooting)
+
+Dependiendo de tu sistema operativo, la aplicación podría requerir permisos especiales para funciones avanzadas como listar ventanas de otras aplicaciones (necesario para "Seleccionar ventana destino"):
+
+- **macOS**: A partir de macOS Catalina (10.15), las aplicaciones requieren permisos explícitos de **Grabación de pantalla** (Screen Recording) y, en algunos casos, de **Accesibilidad** en las Preferencias del Sistema > Privacidad y Seguridad. 
+  - *En desarrollo*: Deberás otorgar estos permisos a tu emulador de terminal (ej. Terminal, iTerm2, VSCode, Ghostty). 
+  - *En producción*: Al ejecutar la aplicación empaquetada (`CommandOrquestor.app`), el sistema solicitará estos permisos automáticamente.
+  - **Efecto de no darlos**: La aplicación no fallará, pero solo podrá listar sus propias ventanas.
+- **Windows**: No se requieren permisos especiales, la API nativa permite listar ventanas de la sesión actual sin restricciones.
+- **Linux**: En X11 suele funcionar sin configuración extra. En entornos con Wayland, la lectura de ventanas puede estar más restringida y depender de la configuración del compositor/protocolo.
 
 ---
 
