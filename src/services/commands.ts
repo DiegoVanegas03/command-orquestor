@@ -38,9 +38,9 @@ export const commandsService = {
   /**
    * Obtiene el historial de comandos ejecutados
    */
-  async getCommandHistory(): Promise<any[]> {
+  async getCommandHistory(limit?: number): Promise<any[]> {
     try {
-      return await invoke('get_commands');
+      return await invoke('get_commands', { limit });
     } catch (error) {
       console.error('Error al obtener el historial:', error);
       return [];

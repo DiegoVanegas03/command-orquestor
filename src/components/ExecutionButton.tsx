@@ -4,11 +4,13 @@ interface ExecutionButtonProps {
   onClick?: () => void
   label?: string
   duration?: number
+  disabled?: boolean
 }
 
 export default function ExecutionButton({
   onClick,
   label = 'Ejecutar Secuencia',
+  disabled,
   duration = 2000,
 }: ExecutionButtonProps) {
   const [status, setStatus] = useState<'idle' | 'executing' | 'success'>('idle')
@@ -52,12 +54,14 @@ export default function ExecutionButton({
   return (
     <button
       onClick={handleStart}
-      disabled={!isIdle}
+      disabled={!isIdle || disabled}
       className={`w-full relative h-14 rounded-xl font-semibold text-subtitle-2 tracking-wide uppercase overflow-hidden transition-all duration-300 group
         ${
-          isIdle
-            ? 'bg-linear-to-br from-bright-snow-400 to-bright-snow-100 text-carbon-black hover:scale-[0.98] shadow-[0_10px_30px_rgba(255,255,255,0.1)] hover:shadow-[0_10px_30px_rgba(255,255,255,0.2)]'
-            : 'bg-carbon-black-400 text-bright-snow/50 cursor-default'
+          disabled
+            ? 'bg-carbon-black-300 text-pale-slate/50 cursor-not-allowed border border-white/5 opacity-70'
+            : !isIdle
+              ? 'bg-linear-to-br from-bright-snow-400 to-bright-snow-100 text-carbon-black cursor-default shadow-[0_10px_30px_rgba(255,255,255,0.1)]'
+              : 'bg-linear-to-br from-bright-snow-400 to-bright-snow-100 text-carbon-black hover:scale-[0.98] shadow-[0_10px_30px_rgba(255,255,255,0.1)] hover:shadow-[0_10px_30px_rgba(255,255,255,0.2)] cursor-pointer'
         }`}
     >
       {/* Capa de progreso (Background Fill) */}

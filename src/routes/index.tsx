@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import ToggleButtonGroup from '@/components/shared/ToggleButtonGroup'
@@ -6,11 +6,13 @@ import SpeedSlider from '@/components/shared/SpeedSlider'
 import CommandInput from '@/components/CommandInput'
 import ExecutionButton from '@/components/ExecutionButton'
 import { commandsService } from '@/services/commands'
+import { useConfigStore } from '@/stores/useConfigStore'
+import SettingsCard from '@/components/SettingsCard'
 
 export const Route = createFileRoute('/')({
   component: Dashboard,
   loader: async () => {
-    const history = await commandsService.getCommandHistory()
+    const history = await commandsService.getCommandHistory(15)
     return { history }
   },
 })
@@ -19,29 +21,24 @@ function Dashboard() {
   // Consumimos la información cargada de manera síncrona
   const { history } = Route.useLoaderData()
 
+  const { typingSpeed, environment, attachedProcess, changeConfig } = useConfigStore()
+
   const [command, setCommand] = useState('')
-  const [enviroment, setEnviroment] = useState('production')
-  const [speed, setSpeed] = useState(50)
 
   const handleCommandChange = (command: string) => {
     setCommand(command)
   }
 
-  const handleEnviromentChange = (enviroment: string) => {
-    setEnviroment(enviroment)
+  const handleEnviromentChange = (environment: string) => {
+    if (environment !== 'production' && environment !== 'sandbox') return
+    changeConfig({ environment })
   }
 
   const handleSpeedChange = (speed: number) => {
-    setSpeed(speed)
+    changeConfig({ typingSpeed: speed })
   }
 
-  const handleExecution = () => {
-    console.log('ejecutando:', command, 'enviroment:', enviroment, 'speed:', speed)
-  }
-
-  function handleClearConsole() {
-    console.log('clear console')
-  }
+  const handleExecution = () => {}
 
   return (
     <main className=" p-12 max-w-7xl mx-auto w-full flex flex-col gap-10">
@@ -55,7 +52,7 @@ function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Area: Terminal Panel (col-span-8) */}
-        <div className="lg:col-span-8 flex flex-col h-[716px]">
+        <div className="lg:col-span-8 flex flex-col h-full min-h-[600px]">
           <div className="flex-1 flex flex-col bg-carbon-black-300/40 backdrop-blur-xl rounded-xl p-2 relative overflow-hidden ring-1 ring-white/10">
             {/* Terminal Header Bar */}
             <div className="flex items-center justify-between px-4 py-3 bg-carbon-black-100/50 rounded-t-lg mb-2">
@@ -128,22 +125,118 @@ function Dashboard() {
               <ToggleButtonGroup
                 options={[
                   { value: 'production', label: 'Producción', icon: 'public' },
-                  { value: 'staging', label: 'Pruebas', icon: 'science' },
+                  { value: 'sandbox', label: 'Pruebas', icon: 'science' },
                 ]}
+                value={environment}
                 onChange={handleEnviromentChange}
               />
             </div>
 
-            <div className="flex-1 items-center flex flex-row">
-              <p className="text-body-md text-pale-slate">
-                Ventana enlazada: <span className="text-bright-snow"> browser:promox </span>
-              </p>
+            {/* Target Window Card */}
+            <div className="mb-6 flex-1">
+              <label className="block text-caption text-pale-slate uppercase tracking-wider mb-3">
+                Ventana Destino
+              </label>
+
+              {environment === 'production' ? (
+                attachedProcess ? (
+                  <div className="bg-carbon-black-300 border border-white/10 rounded-xl p-4 flex items-center gap-4 shadow-sm">
+                    <div className="bg-white/5 p-2.5 rounded-lg text-bright-snow flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[20px]">desktop_windows</span>
+                    </div>
+                    <div className="flex flex-col overflow-hidden">
+                      <span className="text-bright-snow font-semibold text-sm truncate mb-0.5">
+                        {attachedProcess.title}
+                      </span>
+                      <span className="text-pale-slate text-xs font-mono uppercase tracking-wider">
+                        {attachedProcess.app_name}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-red-950/30 border border-red-500/20 rounded-xl p-5 flex flex-col items-center justify-center gap-3 text-center shadow-inner">
+                    <span className="material-symbols-outlined text-red-400 text-[28px] animate-pulse">
+                      error
+                    </span>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-red-200 font-bold text-sm tracking-wide">
+                        VENTANA NO SELECCIONADA
+                      </span>
+                      <span className="text-red-300/60 text-xs">
+                        Es obligatorio asignar un destino en producción.
+                      </span>
+                    </div>
+                    <Link
+                      to="/settings"
+                      className="mt-2 px-5 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-300 text-xs font-bold tracking-wider rounded-lg transition-colors border border-red-500/20 flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">settings</span>
+                      CONFIGURAR AHORA
+                    </Link>
+                  </div>
+                )
+              ) : (
+                <div className="bg-carbon-black-300 border border-white/5 rounded-xl p-4 flex items-center gap-4 opacity-80">
+                  <div className="bg-bright-snow/10 p-2.5 rounded-lg text-bright-snow flex items-center justify-center">
+                    <span className="material-symbols-outlined text-[20px]">science</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-bright-snow font-semibold text-sm mb-0.5">
+                      Modo Sandbox Activo
+                    </span>
+                    <span className="text-pale-slate text-xs">
+                      Los comandos se ejecutarán en el entorno seguro.
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <SpeedSlider onChange={handleSpeedChange} />
+            <SpeedSlider initialValue={typingSpeed} onChange={handleSpeedChange} />
+
+            <ExecutionButton disabled={!attachedProcess} onClick={handleExecution} />
           </div>
 
-          <ExecutionButton onClick={handleExecution} />
+          <SettingsCard icon="history" title="Historial de Ejecución">
+            {history.length === 0 ? (
+              <div className=" text-center flex flex-col items-center gap-3">
+                <span className="material-symbols-outlined text-pale-slate/40 text-[40px]">
+                  history_toggle_off
+                </span>
+                <p className="text-pale-slate text-sm">Aún no hay comandos en el historial.</p>
+              </div>
+            ) : (
+              <div className="relative border-l-2 border-white/5 ml-3 pl-6 py-2 flex flex-col gap-6 max-h-[320px] overflow-y-auto pr-2">
+                {history.map((item) => (
+                  <div
+                    key={item.id}
+                    className="relative group cursor-pointer"
+                    onClick={() => setCommand(item.command)}
+                  >
+                    {/* Timeline Dot */}
+                    <div className="absolute left-[31px] top-4 w-3 h-3 rounded-full bg-carbon-black-400 border-2 border-white/20 group-hover:border-bright-snow group-hover:bg-bright-snow transition-all duration-300 shadow-[0_0_10px_rgba(255,255,255,0)] group-hover:shadow-[0_0_10px_rgba(255,255,255,0.3)] z-10"></div>
+
+                    {/* Content Card */}
+                    <div className="bg-carbon-black-400/30 hover:bg-carbon-black-300/80 border border-transparent hover:border-white/10 rounded-xl p-4 transition-all duration-200">
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="text-[10px] font-mono text-pale-slate/70 uppercase tracking-widest flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-[12px]">schedule</span>
+                          {item.date}
+                        </span>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity text-pale-slate hover:text-bright-snow">
+                          <span className="text-[10px] font-bold tracking-wider">USAR</span>
+                          <span className="material-symbols-outlined text-[14px]">input</span>
+                        </div>
+                      </div>
+                      <p className="text-sm font-mono text-bright-snow leading-relaxed whitespace-pre-wrap line-clamp-2 opacity-90 group-hover:opacity-100">
+                        {item.command}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </SettingsCard>
         </div>
       </div>
     </main>

@@ -45,6 +45,7 @@ export default function Sidebar() {
             <p className="text-caption font-bold tracking-widest text-pale-slate mt-1 uppercase">
               ORQUESTOR
             </p>
+            <small className="text-caption text-pale-slate mt-1 uppercase">v1.0.0</small>
           </div>
           {/* Navigation Links */}
           <div className="flex flex-col flex-1 gap-2">
@@ -72,6 +73,16 @@ export default function Sidebar() {
             </Link>
           </div>
           <div className="mt-auto px-8">
+            <small className="text-caption text-pale-slate mt-1 uppercase">
+              Make with ❤️ by{' '}
+              <a
+                className="font-bold text-bright-snow"
+                href="https://github.com/DiegoVanegas03"
+                target="_blank"
+              >
+                @vanegasdev
+              </a>
+            </small>
             <div className="w-full h-px bg-carbon-black-300 rounded-full"></div>
           </div>
         </div>

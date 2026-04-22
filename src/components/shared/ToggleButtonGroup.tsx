@@ -38,14 +38,14 @@ export default function ToggleButtonGroup({ options, value, onChange }: ToggleBu
           >
             {/* Indicador lateral */}
             <div
-              className={`absolute left-0 top-0 bottom-0 w-[4px] transition-colors ${
+              className={`absolute left-0 top-0 bottom-0 w-[4px] transition-colors  ${
                 isActive ? 'bg-bright-snow' : 'transparent'
               }`}
             />
             {option.icon && (
-              <span className="material-symbols-outlined text-lg">{option.icon}</span>
+              <span className="material-symbols-outlined text-lg ml-2">{option.icon}</span>
             )}
-            {option.label}
+            <span className="truncate">{option.label}</span>
           </button>
         )
       })}

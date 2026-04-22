@@ -12,6 +12,16 @@ pub struct WindowData {
     pub app_name: String,
 }
 
+/// Obtiene la lista de ventanas activas del sistema operativo.
+/// 
+/// **Notas sobre Permisos del Sistema Operativo:**
+/// - **macOS:** A partir de macOS Catalina (10.15), para listar ventanas de *otras* aplicaciones, 
+///   la aplicación (o terminal ejecutando el entorno de desarrollo) requiere permisos de 
+///   "Grabación de Pantalla" (Screen Recording) y opcionalmente "Accesibilidad" en las preferencias 
+///   de Privacidad y Seguridad. Si no se otorgan, solo devolverá las ventanas de la propia app.
+/// - **Windows:** No requiere permisos especiales.
+/// - **Linux:** Generalmente funciona sin permisos extra en X11, pero en Wayland podría 
+///   estar más restringido por la seguridad del protocolo.
 #[tauri::command]
 pub fn get_open_windows() -> Result<Vec<WindowData>, String> {
     let windows = x_win::get_open_windows().map_err(|e| e.to_string())?;
@@ -26,7 +36,6 @@ pub fn get_open_windows() -> Result<Vec<WindowData>, String> {
             });
         }
     }
-
     Ok(result)
 }
 

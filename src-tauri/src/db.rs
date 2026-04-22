@@ -40,11 +40,12 @@ pub fn save_command_internal(conn: &Connection, command: &str, enviroment: &str)
 }
 
 #[tauri::command]
-pub fn get_commands(db: State<'_, Database>) -> Result<Vec<CommandRecord>, String> {
+pub fn get_commands(db: State<'_, Database>, limit: Option<u32>) -> Result<Vec<CommandRecord>, String> {
     let conn = db.conn.lock().unwrap();
-    let mut stmt = conn.prepare("SELECT id, command, enviroment, executed_at FROM commands ORDER BY executed_at DESC LIMIT 50").map_err(|e| e.to_string())?;
+    let limit_val = limit.unwrap_or(50);
+    let mut stmt = conn.prepare("SELECT id, command, enviroment, executed_at FROM commands ORDER BY executed_at DESC LIMIT ?1").map_err(|e| e.to_string())?;
     
-    let command_iter = stmt.query_map([], |row| {
+    let command_iter = stmt.query_map([limit_val], |row| {
         Ok(CommandRecord {
             id: row.get(0)?,
             command: row.get(1)?,

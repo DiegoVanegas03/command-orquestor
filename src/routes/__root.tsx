@@ -1,6 +1,9 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router'
 import Sidebar from '@/components/Sidebar'
 import TopNavBar from '@/components/TopNavBar'
+import { Modal } from '@/components/shared/Modal'
+import { useEffect } from 'react'
+import { useConfigStore } from '@/stores/useConfigStore'
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -8,6 +11,12 @@ export const Route = createRootRoute({
 })
 
 function RootComponent() {
+  const loadConfig = useConfigStore((state) => state.loadConfig)
+
+  useEffect(() => {
+    loadConfig()
+  }, [loadConfig])
+
   return (
     <div className="bg-carbon-black-500 text-bright-snow font-roboto antialiased h-screen overflow-hidden flex selection:bg-carbon-black-700 selection:text-bright-snow">
       {/* SideNavBar */}
@@ -23,6 +32,9 @@ function RootComponent() {
           <Outlet />
         </main>
       </div>
+
+      {/* Global Modal */}
+      <Modal />
     </div>
   )
 }
