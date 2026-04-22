@@ -1,236 +1,200 @@
 # CommandOrquestor
 
-Aplicación de escritorio construida con Tauri, Rust y SQLite diseñada para automatizar la escritura de comandos en interfaces que no permiten copiar/pegar (como consolas web tipo Proxmox), integrando historial, ejecución diferida y control de ventana destino y flows de comandos.
+<p align="center">
+  <strong>Automatiza la escritura de comandos en entornos donde copiar/pegar falla</strong>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/version-v0.1.0--alpha-blue" />
+  <img src="https://img.shields.io/badge/status-alpha-orange" />
+  <img src="https://img.shields.io/badge/tauri-2.x-purple" />
+  <img src="https://img.shields.io/badge/rust-stable-orange" />
+  <img src="https://img.shields.io/badge/license-MIT-green" />
+</p>
 
 ---
 
-# Problemática
+## Tabla de contenidos
 
-En entornos como consolas web (Proxmox, VNC, noVNC, etc.), existen limitaciones críticas:
-
-- No se puede copiar/pegar correctamente
-- Se corrompen caracteres especiales (`'`, `"`, `$`, `\`)
-- Input no confiable (traducción de teclado vía navegador)
-- Errores humanos al escribir comandos largos
-- Dificultad para repetir comandos complejos
-
-Esto vuelve tareas simples (como instalar servicios o ejecutar scripts) en procesos lentos, propensos a errores y frustrantes.
-
----
-
-# Solución
-
-Esta aplicación actúa como un orquestador de comandos automatizado, permitiendo:
-
-- Simular escritura humana controlada
-- Ejecutar comandos con delay programado
-- Reutilizar comandos mediante historial
-- Seleccionar la ventana destino
-- Evitar errores de input en consolas web
-- Crear flows de comandos
-
-En lugar de copiar/pegar, el sistema escribe por el usuario como si fuera entrada manual, pero sin errores.
+* [Vista previa](#vista-previa)
+* [Estado del proyecto](#estado-del-proyecto)
+* [Problema](#problema)
+* [Solución](#solución)
+* [Características](#características)
+* [Arquitectura](#arquitectura)
+* [Instalación](#instalación)
+* [Permisos del sistema](#permisos-del-sistema)
+* [Limitaciones](#limitaciones)
+* [Roadmap](#roadmap)
+* [Contribuir](#contribuir)
+* [Licencia](#licencia)
 
 ---
 
-# Funcionalidades
+## Vista previa
 
-## Historial de comandos
+<p align="center">
+  <img width="800" src="https://github.com/user-attachments/assets/50d4fd95-f9cf-4247-b15b-c1b84e5b06ed" /> 
+  <img width="800" src="https://github.com/user-attachments/assets/00568732-5c5f-44b0-8310-b28a89438254" /> 
+  <img width="800" src="https://github.com/user-attachments/assets/a07df0e3-6e15-418b-a1ec-fd76e167b147" /> 
+  <img width="800" src="https://github.com/user-attachments/assets/2f757752-01b7-4c68-a965-208211fb7d6c" />
+</p>
 
-- Almacenamiento persistente usando SQLite
-- Reutilización rápida de comandos previos
-- Posibilidad de extender a favoritos, etiquetas y agrupación
-
----
-
-## Escritura automática
-
-- Simulación de teclado carácter por carácter
-- Configuración de velocidad mediante delay
-- Compatible con entornos donde el pegado falla
+> Recomendado: reemplazar por un GIF mostrando ejecución real
 
 ---
 
-## Ejecución con retardo
+## Estado del proyecto
 
-- Configuración de tiempo de espera antes de ejecutar
-- Permite cambiar manualmente a la ventana destino
+**Versión:** `v0.1.0-alpha`
+**Progreso estimado:** ~30%
 
----
-
-## Envío automático
-
-- Simulación de tecla Enter tras escribir el comando
-- Flujo completamente automatizado
+Esta es una versión funcional temprana. La base del sistema está implementada, pero aún no está lista para producción.
 
 ---
 
-## Selección de ventana destino
+## Problema
 
-- Permite elegir en qué ventana se ejecutará el comando
-- Basado en enfoque o selección de ventana activa
-- Posible integración con identificadores de ventana del sistema
+Las consolas web (Proxmox, noVNC, VNC, etc.) presentan limitaciones críticas:
 
----
-
-## Flows de comandos
-
-- Secuencias de comandos que se ejecutan en orden
-- Permite crear flujos complejos de comandos
-- Posibilidad de guardar flows para reutilización
-
-## Ejecución controlada
-
-- Reduce errores humanos en escritura manual
-- Ideal para comandos largos o sensibles
+* No permiten copiar/pegar de forma confiable
+* Corrompen caracteres especiales (`'`, `"`, `$`, `\`)
+* Traducen incorrectamente el teclado
+* Incrementan errores humanos
+* Hacen difícil repetir comandos complejos
 
 ---
 
-# Arquitectura
+## Solución
 
-## Enfoque: Arquitectura por Ficheros
+CommandOrquestor introduce un enfoque basado en **simulación de input controlado**, permitiendo:
 
-### React
+* Escritura automatizada precisa
+* Ejecución con control de tiempo
+* Historial reutilizable
+* Selección de ventana destino
+* Flujos de comandos encadenados
+
+---
+
+## Características
+
+| Feature   | Descripción                        |
+| --------- | ---------------------------------- |
+| Historial | Persistencia en SQLite             |
+| Escritura | Simulación carácter por carácter   |
+| Delay     | Ejecución con retardo configurable |
+| Envío     | Simulación de Enter automática     |
+| Ventanas  | Enfoque por PID/proceso            |
+| Flows     | Secuencias de comandos             |
+| Consola   | Logs en tiempo real                |
+
+---
+
+## Arquitectura
+
+### Frontend
 
 ```bash
 src/
-├── assets/
 ├── components/
 ├── hooks/
 ├── routes/
 ├── stores/
-├── App.tsx
-├── main.tsx
+├── services/
 ```
 
-- **React Hooks**: Se utilizarán custom hooks para aislar y reutilizar la lógica de estado y efectos.
-- **TanStack Router**: Sistema de enrutamiento Type-Safe para la navegación de la aplicación.
+* React + TypeScript
+* TanStack Router
+* Estado centralizado
 
-### Rust
+---
 
-Dado que es un proyecto pequeño, se opta por una estructura simple basada en separación por archivos:
+### Backend
 
 ```bash
-src/
-├── main.rs
+src-tauri/src/
 ├── commands.rs
 ├── db.rs
 ├── automation.rs
 ├── window.rs
 ```
 
-Descripción:
-
-- main.rs: punto de entrada de Tauri
-- commands.rs: lógica expuesta al frontend
-- db.rs: manejo de SQLite
-- automation.rs: lógica de escritura automática
-- window.rs: control de ventanas
-
-Esto permite simplicidad sin sobreingeniería.
-
----
-
-# Backend (Rust + Tauri)
-
 Responsabilidades:
 
-- Control de ejecución de comandos
-- Acceso a base de datos SQLite
-- Integración con el sistema operativo (input y ventanas)
-
-Tecnologías:
-
-- Tauri
-- Rust
-- SQLite
+* Ejecución de comandos
+* Control de ventanas
+* Persistencia
+* Integración con OS
 
 ---
 
-# Base de Datos
+## Instalación
 
-SQLite con una tabla básica:
+### Desarrollo
 
-```sql
-CREATE TABLE commands (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  command TEXT NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+```bash
+pnpm install
+pnpm tauri dev
 ```
 
 ---
 
-# Frontend
+### Build
 
-Tecnologías:
+```bash
+pnpm tauri build
+```
 
-- HTML y JavaScript (o framework ligero opcional)
-- Tailwind CSS
+Salida:
 
-Estilo:
-
-- Desarrollo rápido con Tailwind
-- Identidad visual basada en Glassmorphism
-- Tipografía Roboto
-
----
-
-# Decisiones de Diseño
-
-- Simplicidad sobre complejidad
-- UI ligera sin dependencias innecesarias
-- Backend robusto en Rust
-- Persistencia local con SQLite
-- Experiencia enfocada en precisión y velocidad
+* `.deb`
+* `.AppImage`
+* binario
 
 ---
 
-# Casos de Uso
+## Permisos del sistema
 
-- Instalación de servicios en servidores remotos
-- Automatización en consolas web
-- Ejecución repetitiva de comandos
-- Configuración de túneles como Cloudflare
-- Entornos de laboratorio y testing
+### macOS
 
----
+* Accesibilidad
+* Screen Recording
 
-# Posibles Extensiones
+### Windows
 
-- Ejecución remota vía SSH
-- Importación y exportación de comandos
-- Soporte multi-ventana avanzado
-- Integración con APIs externas
+* Sin configuración adicional
 
----
+### Linux
 
-# Permisos del Sistema (Troubleshooting)
+* X11: funciona directo
+* Wayland: limitado
 
-Dependiendo de tu sistema operativo, la aplicación podría requerir permisos especiales para funciones avanzadas como listar ventanas de otras aplicaciones (necesario para "Seleccionar ventana destino"):
+Dependencias:
 
-- **macOS**: A partir de macOS Catalina (10.15), las aplicaciones requieren permisos explícitos de **Grabación de pantalla** (Screen Recording) y, en algunos casos, de **Accesibilidad** en las Preferencias del Sistema > Privacidad y Seguridad. 
-  - *En desarrollo*: Deberás otorgar estos permisos a tu emulador de terminal (ej. Terminal, iTerm2, VSCode, Ghostty). 
-  - *En producción*: Al ejecutar la aplicación empaquetada (`CommandOrquestor.app`), el sistema solicitará estos permisos automáticamente.
-  - **Efecto de no darlos**: La aplicación no fallará, pero solo podrá listar sus propias ventanas.
-- **Windows**: No se requieren permisos especiales, la API nativa permite listar ventanas de la sesión actual sin restricciones.
-- **Linux**: En X11 suele funcionar sin configuración extra. En entornos con Wayland, la lectura de ventanas puede estar más restringida y depender de la configuración del compositor/protocolo.
+```bash
+sudo apt install xdotool
+```
 
 ---
 
-# Estado del Proyecto
+## Contribuir
 
-MVP enfocado en:
-
-- escritura automática
-- historial
-- ejecución básica
+1. Fork del proyecto
+2. Crear rama (`feature/...`)
+3. Commit claro
+4. Abrir Pull Request
 
 ---
 
-# Concepto Clave
+## Licencia
 
-No es una terminal tradicional.
-Es un orquestador de comandos para entornos donde el input convencional falla.
+MIT
+
+---
+
+## Notas
+
+Este proyecto busca resolver un problema específico de automatización en entornos restringidos. La arquitectura está diseñada para escalar, pero aún está en fase de evolución.
 
 ---
