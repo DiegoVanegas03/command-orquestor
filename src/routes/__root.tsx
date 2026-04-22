@@ -4,6 +4,7 @@ import TopNavBar from '@/components/TopNavBar'
 import { Modal } from '@/components/shared/Modal'
 import { useEffect } from 'react'
 import { useConfigStore } from '@/stores/useConfigStore'
+import { useConsoleStore } from '@/stores/useConsoleStore'
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -12,10 +13,22 @@ export const Route = createRootRoute({
 
 function RootComponent() {
   const loadConfig = useConfigStore((state) => state.loadConfig)
+  const log = useConsoleStore((state) => state.log)
 
   useEffect(() => {
-    loadConfig()
-  }, [loadConfig])
+    log('sys', 'Inicializando entorno de ejecución Orquestor...')
+    log('sys', 'Cargando configuración desde el almacén persistente.')
+
+    loadConfig().then(() => {
+      log('ok', '→ Configuración cargada correctamente.')
+      log('ok', '→ Asignando contexto de ejecución... OK')
+      log('exec', 'Listo para la secuencia de comandos.')
+      log('info', 'Esperando entrada del usuario...')
+    }).catch(() => {
+      log('warn', '→ No se pudo cargar la configuración guardada. Usando valores por defecto.')
+      log('exec', 'Listo para la secuencia de comandos.')
+    })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="bg-carbon-black-500 text-bright-snow font-roboto antialiased h-screen overflow-hidden flex selection:bg-carbon-black-700 selection:text-bright-snow">

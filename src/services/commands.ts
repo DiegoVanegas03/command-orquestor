@@ -1,15 +1,11 @@
 import { invoke } from '@tauri-apps/api/core';
+import { WindowData } from '@/components/WindowSelectionModalContent';
 
 export interface CommandResponse {
   success: boolean;
   message: string;
 }
 
-export interface WindowData {
-  id: number;
-  title: string;
-  app_name: string;
-}
 
 export const commandsService = {
   /**
@@ -17,15 +13,15 @@ export const commandsService = {
    * @param command El comando o secuencia a ejecutar
    * @param speed La velocidad de escritura (ms por tecla)
    * @param enviroment Entorno de ejecución (ej. production, staging)
-   * @param targetWindow (Opcional) El nombre de la aplicación donde enfocar
+   * @param targetPid (Opcional) PID del proceso donde enfocar antes de escribir
    */
-  async executeSequence(command: string, speed: number, enviroment: string, targetWindow?: string): Promise<CommandResponse> {
+  async executeSequence(command: string, speed: number, enviroment: string, targetPid?: number): Promise<CommandResponse> {
     try {
       const result = await invoke<string>('execute_sequence', {
         command,
         speed,
         enviroment,
-        targetWindow: targetWindow || null,
+        targetPid: targetPid ?? null,
       });
       
       return { success: true, message: result };

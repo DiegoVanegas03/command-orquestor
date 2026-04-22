@@ -7,7 +7,8 @@ use tauri::State;
 
 #[derive(Serialize, Deserialize)]
 pub struct WindowData {
-    pub id: u32,
+    pub id: u32,         // CGWindowID / Window handle (identificador de ventana)
+    pub process_id: u32, // PID real del proceso (unix id)
     pub title: String,
     pub app_name: String,
 }
@@ -31,6 +32,7 @@ pub fn get_open_windows() -> Result<Vec<WindowData>, String> {
         if !w.title.is_empty() {
             result.push(WindowData {
                 id: w.id,
+                process_id: w.info.process_id,
                 title: w.title,
                 app_name: w.info.name,
             });
@@ -39,35 +41,64 @@ pub fn get_open_windows() -> Result<Vec<WindowData>, String> {
     Ok(result)
 }
 
-fn focus_window_by_app(app_name: &str) -> Result<(), String> {
+/// Enfoca una ventana del sistema operativo utilizando su PID (Process ID).
+///
+/// Usar el PID es más preciso que el nombre de app: evita colisiones con
+/// procesos que comparten nombre y permite identificar instancias específicas.
+///
+/// - **macOS:** usa AppleScript a través de `System Events` para buscar el
+///   proceso cuyo `unix id` coincida con el PID y llevarlo al frente.
+/// - **Windows:** usa PowerShell para traer al frente el proceso por su ID.
+/// - **Linux (X11):** usa `xdotool` para buscar ventanas del PID y hacer foco.
+fn focus_window_by_pid(pid: u32) -> Result<(), String> {
     #[cfg(target_os = "macos")]
     {
-        std::process::Command::new("osascript")
+        let script = format!(
+            "tell application \"System Events\"\n\
+               set target_proc to first process whose unix id is {}\n\
+               set frontmost of target_proc to true\n\
+             end tell",
+            pid
+        );
+        let output = std::process::Command::new("osascript")
             .arg("-e")
-            .arg(format!("tell application \"{}\" to activate", app_name))
+            .arg(&script)
             .output()
             .map_err(|e| e.to_string())?;
+
+        if !output.status.success() {
+            let err = String::from_utf8_lossy(&output.stderr);
+            return Err(format!("osascript error: {}", err));
+        }
     }
     #[cfg(target_os = "windows")]
     {
-        // En Windows, powershell o nircmd u otras utilidades.
-        // Aquí una aproximación con powershell
+        // Obtener el HWND del proceso por PID y llevarlo al frente via PowerShell
+        let script = format!(
+            "Add-Type @'\n\
+             using System;\n\
+             using System.Runtime.InteropServices;\n\
+             public class Win32 {{\n\
+               [DllImport(\"user32.dll\")] public static extern bool SetForegroundWindow(IntPtr hWnd);\n\
+               [DllImport(\"user32.dll\")] public static extern IntPtr GetForegroundWindow();\n\
+             }}\n\
+             '@\n\
+             $proc = Get-Process -Id {0} -ErrorAction SilentlyContinue\n\
+             if ($proc) {{ [Win32]::SetForegroundWindow($proc.MainWindowHandle) }}",
+            pid
+        );
         std::process::Command::new("powershell")
-            .arg("-Command")
-            .arg(format!(
-                "(New-Object -ComObject WScript.Shell).AppActivate('{}')",
-                app_name
-            ))
+            .args(["-NoProfile", "-Command", &script])
             .output()
             .map_err(|e| e.to_string())?;
     }
     #[cfg(target_os = "linux")]
     {
-        std::process::Command::new("wmctrl")
-            .arg("-a")
-            .arg(app_name)
+        // xdotool busca todas las ventanas del PID y activa la primera
+        std::process::Command::new("xdotool")
+            .args(["search", "--pid", &pid.to_string(), "windowfocus", "--sync"])
             .output()
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| format!("xdotool error (¿instalado?): {}", e))?;
     }
     Ok(())
 }
@@ -78,14 +109,15 @@ pub async fn execute_sequence(
     command: String,
     speed: u64,
     enviroment: String,
-    target_window: Option<String>,
+    // PID del proceso destino. None = sin foco (sandbox o no configurado).
+    target_pid: Option<u32>,
 ) -> Result<String, String> {
     let mut enigo = Enigo::new(&Settings::default()).map_err(|e| e.to_string())?;
 
-    // Si hay una ventana objetivo, la enfocamos primero
-    if let Some(app_name) = target_window {
-        focus_window_by_app(&app_name)?;
-        // Pequeña pausa para asegurar que el OS haga el foco
+    // Si hay un PID objetivo, enfocamos la ventana antes de escribir
+    if let Some(pid) = target_pid {
+        focus_window_by_pid(pid)?;
+        // Pausa para que el OS complete el cambio de foco
         thread::sleep(Duration::from_millis(500));
     }
 

@@ -20,7 +20,8 @@ const EDITORS_ICONS = [
 ]
 
 export interface WindowData {
-  id: number
+  id: number       // CGWindowID / window handle
+  process_id: number // PID real del proceso
   title: string
   app_name: string
 }

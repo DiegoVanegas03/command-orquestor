@@ -4,10 +4,15 @@ import { WindowData } from '@/components/WindowSelectionModalContent'
 
 export type Environment = 'production' | 'sandbox'
 
+interface ShortCutType {
+  type: 'pause' | 'stop'
+  keys: Set<string>
+}
+
 interface AppConfig {
   typingSpeed: number
   environment: Environment
-  globalShortcuts: boolean
+  globalShortcuts: ShortCutType[]
   attachedProcess: WindowData | null
 }
 
@@ -30,7 +35,10 @@ const initStore = async () => {
 export const useConfigStore = create<ConfigStore>((set, get) => ({
   typingSpeed: 50,
   environment: 'production',
-  globalShortcuts: false,
+  globalShortcuts: [
+    { type: 'pause', keys: new Set([]) },
+    { type: 'stop', keys: new Set([]) },
+  ],
   attachedProcess: null,
 
   changeConfig: (config) => set((state) => ({ ...state, ...config })),
@@ -41,7 +49,7 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
 
       const typingSpeed = await store.get<number>('typingSpeed')
       const environment = await store.get<Environment>('environment')
-      const globalShortcuts = await store.get<boolean>('globalShortcuts')
+      const globalShortcuts = await store.get<ShortCutType[]>('globalShortcuts')
 
       set((state) => ({
         typingSpeed:

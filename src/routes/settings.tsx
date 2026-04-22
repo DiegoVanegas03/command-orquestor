@@ -12,7 +12,10 @@ export const Route = createFileRoute('/settings')({
 function Settings() {
   const { openModal } = useModalStore()
 
-  const { attachedProcess, typingSpeed, changeConfig } = useConfigStore()
+  const { attachedProcess, typingSpeed, globalShortcuts, changeConfig } = useConfigStore()
+
+  const stopShortcut = globalShortcuts.find((s) => s.type === 'stop')
+  const pauseShortcut = globalShortcuts.find((s) => s.type === 'pause')
 
   const handleSearchActiveWindows = () => {
     openModal('Selección de ventana', <WindowSelectionModalContent />, {
@@ -60,7 +63,11 @@ function Settings() {
                 Parada de Emergencia
               </span>
               <button className="bg-carbon-black-400 whitespace-nowrap text-bright-snow px-4 py-2 rounded-lg text-caption font-bold uppercase tracking-widest hover:bg-carbon-black-600 transition-colors flex items-center gap-2 ring-1 ring-white/5">
-                <span>CTRL + ALT + E</span>
+                {stopShortcut && stopShortcut.keys.size === 0 ? (
+                  <span>Sin configurar</span>
+                ) : (
+                  <span>{[...stopShortcut!.keys].join(' + ')}</span>
+                )}
                 <span className="material-symbols-outlined text-[14px] text-pale-slate">edit</span>
               </button>
             </div>

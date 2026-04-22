@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useConsoleStore, type ConsoleEntry } from '@/stores/useConsoleStore'
 
 import ToggleButtonGroup from '@/components/shared/ToggleButtonGroup'
 import SpeedSlider from '@/components/shared/SpeedSlider'
@@ -18,8 +19,15 @@ export const Route = createFileRoute('/')({
 })
 
 function Dashboard() {
-  // Consumimos la información cargada de manera síncrona
-  const { history } = Route.useLoaderData()
+  // Inicializamos el historial desde el loader y lo manejamos como estado local
+  // para poder actualizarlo sin recargar la ruta completa.
+  const loaderData = Route.useLoaderData()
+  const [history, setHistory] = useState(loaderData.history)
+
+  const refreshHistory = async () => {
+    const updated = await commandsService.getCommandHistory(15)
+    setHistory(updated)
+  }
 
   const { typingSpeed, environment, attachedProcess, changeConfig } = useConfigStore()
 
@@ -38,7 +46,44 @@ function Dashboard() {
     changeConfig({ typingSpeed: speed })
   }
 
-  const handleExecution = () => {}
+  const { entries, log, clear } = useConsoleStore()
+  const consoleEndRef = useRef<HTMLDivElement>(null)
+
+  // Auto-scroll al fondo cuando llegan nuevas entradas
+  useEffect(() => {
+    consoleEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [entries])
+
+  const handleExecution = async () => {
+    if (!command.trim()) return
+
+    const pid = environment === 'production' ? attachedProcess?.process_id : undefined
+
+    log('exec', `$ ${command}`)
+
+    if (environment === 'production' && !attachedProcess) {
+      log('error', 'No hay ventana destino seleccionada. Ve a Configuración para adjuntar un proceso.')
+      return
+    }
+
+    if (pid) {
+      log('sys', `→ Enfocando proceso PID ${pid} (${attachedProcess?.app_name})...`)
+    } else {
+      log('info', '→ Modo sandbox — ejecutando sin ventana destino.')
+    }
+
+    try {
+      const result = await commandsService.executeSequence(command, typingSpeed, environment, pid)
+      if (result.success) {
+        log('ok', `✓ ${result.message}`)
+        await refreshHistory()  // Actualizar timeline tras ejecución exitosa
+      } else {
+        log('error', `✗ ${result.message}`)
+      }
+    } catch (e) {
+      log('error', `✗ Error inesperado: ${String(e)}`)
+    }
+  }
 
   return (
     <main className=" p-12 max-w-7xl mx-auto w-full flex flex-col gap-10">
@@ -61,43 +106,41 @@ function Dashboard() {
                 <span className="text-caption text-bright-snow font-bold uppercase tracking-widest">
                   Output
                 </span>
+                <span className="text-[10px] font-mono text-pale-slate/40 ml-1">
+                  {entries.length} líneas
+                </span>
               </div>
-              <div className="flex gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-carbon-black-400 ring-1 ring-white/30"></div>
-                <div className="w-2.5 h-2.5 rounded-full bg-carbon-black-400 ring-1 ring-white/30"></div>
-                <div className="w-2.5 h-2.5 rounded-full bg-bright-snow/80 shadow-[0_0_8px_rgba(255,255,255,0.5)]"></div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={clear}
+                  title="Limpiar consola"
+                  className="text-pale-slate/50 hover:text-pale-slate transition-colors flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider"
+                >
+                  <span className="material-symbols-outlined text-[14px]">mop</span>
+                  Clear
+                </button>
+                <div className="flex gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-carbon-black-400 ring-1 ring-white/30"></div>
+                  <div className="w-2.5 h-2.5 rounded-full bg-carbon-black-400 ring-1 ring-white/30"></div>
+                  <div className="w-2.5 h-2.5 rounded-full bg-bright-snow/80 shadow-[0_0_8px_rgba(255,255,255,0.5)]"></div>
+                </div>
               </div>
             </div>
 
             {/* Output Area */}
-            <div className="flex-1 bg-carbon-black-100 rounded-lg p-6 overflow-y-auto font-mono text-sm leading-relaxed text-pale-slate relative shadow-[inset_0_4px_20px_rgba(0,0,0,0.5)]">
-              <div className="mb-2">
-                <span className="text-pale-slate-400">[SYS]</span> Inicializando entorno de
-                ejecución Orquestor v2.4.1...
-              </div>
-              <div className="mb-2">
-                <span className="text-pale-slate-400">[SYS]</span> Cargando configuración desde el
-                manifiesto estándar.
-              </div>
-              <div className="mb-2">
-                <span className="text-platinum-400"> -&gt; Validando endpoints... OK</span>
-              </div>
-              <div className="mb-2">
-                <span className="text-platinum-400"> -&gt; Asignando pool de memoria... OK</span>
-              </div>
-              <div className="mb-2 text-bright-snow font-bold">
-                <span className="text-pale-slate-400">[EXEC]</span> Listo para la secuencia de
-                comandos.
-              </div>
-              <div className="mb-2 text-pale-slate opacity-50">
-                Esperando entrada del usuario...
-              </div>
-              <div className="absolute bottom-6 left-6 flex items-center gap-2 text-bright-snow">
-                <span className="material-symbols-outlined text-sm animate-pulse">
-                  chevron_right
-                </span>
+            <div className="flex-1 bg-carbon-black-100 rounded-lg p-4 overflow-y-auto font-mono text-sm leading-relaxed text-pale-slate shadow-[inset_0_4px_20px_rgba(0,0,0,0.5)] flex flex-col gap-0.5">
+              {entries.map((entry) => (
+                <ConsoleEntryLine key={entry.id} entry={entry} />
+              ))}
+
+              {/* Cursor parpadeante al final */}
+              <div className="flex items-center gap-2 text-bright-snow mt-2">
+                <span className="material-symbols-outlined text-sm animate-pulse">chevron_right</span>
                 <span className="w-2 h-4 bg-bright-snow animate-pulse"></span>
               </div>
+
+              {/* Ancla para auto-scroll */}
+              <div ref={consoleEndRef} />
             </div>
 
             {/* Prompt Input Area */}
@@ -199,46 +242,125 @@ function Dashboard() {
 
           <SettingsCard icon="history" title="Historial de Ejecución">
             {history.length === 0 ? (
-              <div className=" text-center flex flex-col items-center gap-3">
-                <span className="material-symbols-outlined text-pale-slate/40 text-[40px]">
+              <div className="text-center flex flex-col items-center gap-3 py-4">
+                <span className="material-symbols-outlined text-pale-slate/30 text-[44px]">
                   history_toggle_off
                 </span>
-                <p className="text-pale-slate text-sm">Aún no hay comandos en el historial.</p>
+                <p className="text-pale-slate/50 text-xs tracking-wide uppercase font-mono">Sin registros aún</p>
               </div>
             ) : (
-              <div className="relative border-l-2 border-white/5 ml-3 pl-6 py-2 flex flex-col gap-6 max-h-[320px] overflow-y-auto pr-2">
-                {history.map((item) => (
-                  <div
-                    key={item.id}
-                    className="relative group cursor-pointer"
-                    onClick={() => setCommand(item.command)}
-                  >
-                    {/* Timeline Dot */}
-                    <div className="absolute left-[31px] top-4 w-3 h-3 rounded-full bg-carbon-black-400 border-2 border-white/20 group-hover:border-bright-snow group-hover:bg-bright-snow transition-all duration-300 shadow-[0_0_10px_rgba(255,255,255,0)] group-hover:shadow-[0_0_10px_rgba(255,255,255,0.3)] z-10"></div>
+              <div className="relative max-h-[380px] overflow-y-auto pr-1">
+                {/* Línea vertical de la timeline */}
+                <div className="absolute left-[7px] top-2 bottom-2 w-px bg-white/8 rounded-full" />
 
-                    {/* Content Card */}
-                    <div className="bg-carbon-black-400/30 hover:bg-carbon-black-300/80 border border-transparent hover:border-white/10 rounded-xl p-4 transition-all duration-200">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="text-[10px] font-mono text-pale-slate/70 uppercase tracking-widest flex items-center gap-1.5">
-                          <span className="material-symbols-outlined text-[12px]">schedule</span>
-                          {item.date}
-                        </span>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity text-pale-slate hover:text-bright-snow">
-                          <span className="text-[10px] font-bold tracking-wider">USAR</span>
-                          <span className="material-symbols-outlined text-[14px]">input</span>
+                <div className="flex flex-col gap-1">
+                  {history.map((item: any, index: number) => {
+                    const dt = new Date(item.executed_at)
+                    const dateStr = dt.toLocaleDateString('es-MX', {
+                      day: '2-digit', month: '2-digit', year: 'numeric'
+                    })
+                    const timeStr = dt.toLocaleTimeString('es-MX', {
+                      hour: '2-digit', minute: '2-digit', hour12: false
+                    })
+                    const isFirst = index === 0
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="relative flex items-start gap-4 pl-6 py-2 group cursor-pointer rounded-lg hover:bg-white/3 transition-colors duration-150"
+                        onClick={() => setCommand(item.command)}
+                      >
+                        {/* Nodo de la timeline */}
+                        <div className={`absolute left-0 top-3.5 flex items-center justify-center w-[15px] h-[15px] rounded-full border transition-all duration-300 shrink-0
+                          ${isFirst
+                            ? 'bg-bright-snow/20 border-bright-snow/60 shadow-[0_0_8px_rgba(255,255,255,0.25)]'
+                            : 'bg-carbon-black-500 border-white/15 group-hover:border-white/40 group-hover:bg-white/5'
+                          }`}
+                        >
+                          <div className={`w-[5px] h-[5px] rounded-full ${isFirst ? 'bg-bright-snow' : 'bg-white/30 group-hover:bg-white/60'} transition-colors`} />
+                        </div>
+
+                        {/* Contenido */}
+                        <div className="flex-1 min-w-0">
+                          {/* Fecha + hora + entorno */}
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className="text-[10px] font-mono text-pale-slate/50 tracking-wide">
+                              {dateStr}
+                            </span>
+                            <span className="text-pale-slate/20 text-[10px]">·</span>
+                            <span className="text-[10px] font-mono text-pale-slate/70 font-bold">
+                              {timeStr}
+                            </span>
+                            <span className="text-pale-slate/20 text-[10px]">·</span>
+                            <span className={`text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded font-mono
+                              ${item.enviroment === 'production'
+                                ? 'bg-white/5 text-pale-slate/50'
+                                : 'bg-emerald-950/50 text-emerald-500/70'
+                              }`}>
+                              {item.enviroment}
+                            </span>
+                          </div>
+
+                          {/* Comando en bloque de código */}
+                          <div className="bg-carbon-black-100/60 border border-white/5 rounded-md px-3 py-2 group-hover:border-white/10 transition-colors">
+                            <code className="text-[12px] font-mono text-bright-snow/90 leading-relaxed whitespace-pre-wrap break-all line-clamp-3">
+                              <span className="text-pale-slate/40 select-none mr-1.5">$</span>{item.command}
+                            </code>
+                          </div>
+                        </div>
+
+                        {/* Badge "Usar" */}
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 flex items-center gap-1 pt-1 text-pale-slate/50 hover:text-bright-snow">
+                          <span className="material-symbols-outlined text-[16px]">subdirectory_arrow_left</span>
                         </div>
                       </div>
-                      <p className="text-sm font-mono text-bright-snow leading-relaxed whitespace-pre-wrap line-clamp-2 opacity-90 group-hover:opacity-100">
-                        {item.command}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                    )
+                  })}
+                </div>
               </div>
             )}
           </SettingsCard>
         </div>
       </div>
     </main>
+  )
+}
+
+// ─── ConsoleEntryLine ────────────────────────────────────────────────────────
+
+const LEVEL_STYLES: Record<string, { badge: string; badgeClass: string; textClass: string }> = {
+  sys:   { badge: '[SYS]',   badgeClass: 'text-pale-slate/70',      textClass: 'text-pale-slate' },
+  exec:  { badge: '[EXEC]',  badgeClass: 'text-bright-snow/80',     textClass: 'text-bright-snow font-bold' },
+  ok:    { badge: '[OK]',    badgeClass: 'text-emerald-400/80',      textClass: 'text-emerald-300' },
+  warn:  { badge: '[WARN]',  badgeClass: 'text-amber-400/80',        textClass: 'text-amber-300' },
+  error: { badge: '[ERR]',   badgeClass: 'text-red-400/80',          textClass: 'text-red-300' },
+  info:  { badge: '[INFO]',  badgeClass: 'text-pale-slate/40',       textClass: 'text-pale-slate/60 italic' },
+  clear: { badge: '[CLR]',   badgeClass: 'text-pale-slate/30',       textClass: 'text-pale-slate/30 italic' },
+}
+
+function formatTime(date: Date): string {
+  return date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+}
+
+function ConsoleEntryLine({ entry }: { entry: ConsoleEntry }) {
+  const style = LEVEL_STYLES[entry.level] ?? LEVEL_STYLES.info
+
+  return (
+    <div className="flex items-start gap-2 py-0.5 group">
+      {/* Timestamp */}
+      <span className="text-[10px] text-pale-slate/30 font-mono pt-0.5 w-[62px] shrink-0 select-none">
+        {formatTime(entry.timestamp)}
+      </span>
+
+      {/* Badge */}
+      <span className={`text-[11px] font-bold font-mono shrink-0 pt-px w-[52px] ${style.badgeClass}`}>
+        {style.badge}
+      </span>
+
+      {/* Message */}
+      <span className={`text-[12px] font-mono leading-relaxed flex-1 ${style.textClass}`}>
+        {entry.message}
+      </span>
+    </div>
   )
 }
