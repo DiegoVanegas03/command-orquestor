@@ -45,7 +45,7 @@ export default function Sidebar() {
             <p className="text-caption font-bold tracking-widest text-pale-slate mt-1 uppercase">
               ORQUESTOR
             </p>
-            <small className="text-caption text-pale-slate mt-1 uppercase">v1.0.0</small>
+            <small className="text-caption text-pale-slate mt-1 lowercase">alpha</small>
           </div>
           {/* Navigation Links */}
           <div className="flex flex-col flex-1 gap-2">
