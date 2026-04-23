@@ -13,8 +13,10 @@ pub fn run() {
         })
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
-            commands::execute_sequence, 
+            commands::execute_sequence,
             commands::get_open_windows,
+            commands::check_gnome_extension,
+            commands::setup_gnome_extension,
             db::get_commands
         ])
         .run(tauri::generate_context!())

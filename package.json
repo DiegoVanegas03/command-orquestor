@@ -20,6 +20,7 @@
     "material-symbols": "^0.44.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "sileo": "^0.1.5",
     "zustand": "^5.0.12"
   },
   "devDependencies": {

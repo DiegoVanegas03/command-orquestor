@@ -15,7 +15,7 @@ function Settings() {
   const { attachedProcess, typingSpeed, globalShortcuts, changeConfig } = useConfigStore()
 
   const stopShortcut = globalShortcuts.find((s) => s.type === 'stop')
-  const pauseShortcut = globalShortcuts.find((s) => s.type === 'pause')
+  //const pauseShortcut = globalShortcuts.find((s) => s.type === 'pause')
 
   const handleSearchActiveWindows = () => {
     openModal('Selección de ventana', <WindowSelectionModalContent />, {

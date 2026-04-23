@@ -6,6 +6,19 @@ export interface CommandResponse {
   message: string;
 }
 
+export interface GnomeExtensionStatus {
+  needs_extension: boolean;
+  is_installed: boolean;
+  is_enabled: boolean;
+  message: string;
+}
+
+export interface GnomeSetupResult {
+  success: boolean;
+  next_step: 'RESTART_SESSION' | 'ENABLE_EXTENSION' | 'DONE' | 'ERROR';
+  message: string;
+}
+
 
 export const commandsService = {
   /**
@@ -52,6 +65,39 @@ export const commandsService = {
     } catch (error) {
       console.error('Error al obtener ventanas abiertas:', error);
       return [];
+    }
+  },
+
+  /**
+   * Verifica el estado de la extensión de GNOME para Wayland
+   */
+  async checkGnomeExtension(): Promise<GnomeExtensionStatus> {
+    try {
+      return await invoke<GnomeExtensionStatus>('check_gnome_extension');
+    } catch (error) {
+      console.error('Error al verificar extensión GNOME:', error);
+      return { 
+        needs_extension: false, 
+        is_installed: false, 
+        is_enabled: false, 
+        message: String(error) 
+      };
+    }
+  },
+
+  /**
+   * Ejecuta el proceso de instalación/activación de la extensión GNOME
+   */
+  async setupGnomeExtension(): Promise<GnomeSetupResult> {
+    try {
+      return await invoke<GnomeSetupResult>('setup_gnome_extension');
+    } catch (error) {
+      console.error('Error al configurar extensión GNOME:', error);
+      return { 
+        success: false, 
+        next_step: 'ERROR', 
+        message: String(error) 
+      };
     }
   }
 };

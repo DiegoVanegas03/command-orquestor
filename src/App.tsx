@@ -13,8 +13,15 @@ declare module '@tanstack/react-router' {
   }
 }
 
+import { Toaster } from 'sileo'
+
 function App() {
-  return <RouterProvider router={router} />
+  return (
+    <>
+      <Toaster position="top-right" />
+      <RouterProvider router={router} />
+    </>
+  )
 }
 
 export default App
