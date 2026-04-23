@@ -114,8 +114,8 @@ pub fn get_open_windows() -> Result<Vec<WindowData>, String> {
             // Wayland + GNOME: necesita la extensión x-win@miniben90.org
             LinuxDisplayEnv::WaylandGnome => {
                 // Verificamos primero si la extensión está lista
-                let installed = x_win::is_installed_extension();
-                let enabled = x_win::is_enabled_extension();
+                let installed = x_win::is_installed_extension().unwrap_or(false);
+                let enabled   = x_win::is_enabled_extension().unwrap_or(false);
 
                 if !installed {
                     // Prefijo reconocible para que el frontend muestre el onboarding
@@ -597,8 +597,8 @@ pub fn check_gnome_extension() -> GnomeExtensionStatus {
             };
         }
 
-        let installed = x_win::is_installed_extension();
-        let enabled = x_win::is_enabled_extension();
+        let installed = x_win::is_installed_extension().unwrap_or(false);
+        let enabled   = x_win::is_enabled_extension().unwrap_or(false);
 
         let message = match (installed, enabled) {
             (false, _) => {
@@ -667,8 +667,8 @@ pub fn setup_gnome_extension() -> GnomeSetupResult {
             };
         }
 
-        let installed = x_win::is_installed_extension();
-        let enabled = x_win::is_enabled_extension();
+        let installed = x_win::is_installed_extension().unwrap_or(false);
+        let enabled   = x_win::is_enabled_extension().unwrap_or(false);
 
         // Paso 1: instalar archivos si no están
         if !installed {
