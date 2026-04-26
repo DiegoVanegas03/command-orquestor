@@ -23,6 +23,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::execute_sequence,
             commands::get_open_windows,
+            commands::is_wayland,
             db::get_commands
         ])
         .run(tauri::generate_context!())

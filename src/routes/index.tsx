@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { invoke } from '@tauri-apps/api/core'
 import { useState, useEffect, useRef } from 'react'
 import { useConsoleStore } from '@/stores/useConsoleStore'
 
@@ -35,6 +36,18 @@ function Dashboard() {
 
   const [command, setCommand] = useState('')
   const [countdown, setCountdown] = useState<number | null>(null)
+  const [isWayland, setIsWayland] = useState(false)
+
+  useEffect(() => {
+    invoke<boolean>('is_wayland')
+      .then((wayland) => {
+        setIsWayland(wayland)
+        if (wayland && executionMode === 'automatic') {
+          changeConfig({ executionMode: 'manual' })
+        }
+      })
+      .catch(console.error)
+  }, [executionMode, changeConfig])
 
   const handleCommandChange = (command: string) => {
     setCommand(command)
@@ -222,12 +235,22 @@ function Dashboard() {
                   </label>
                   <ToggleButtonGroup
                     options={[
-                      { value: 'automatic', label: 'Automático', icon: 'auto_awesome' },
+                      { 
+                        value: 'automatic', 
+                        label: isWayland ? 'Automático (No Soportado)' : 'Automático', 
+                        icon: 'auto_awesome',
+                        disabled: isWayland 
+                      },
                       { value: 'manual', label: 'Manual', icon: 'pan_tool' },
                     ]}
                     value={executionMode}
                     onChange={handleExecutionModeChange}
                   />
+                  {isWayland && (
+                    <p className="text-red-400 text-xs mt-2 font-mono tracking-wide">
+                      El modo automático está deshabilitado debido a restricciones de Wayland en Linux.
+                    </p>
+                  )}
                 </div>
               )}
 

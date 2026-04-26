@@ -148,3 +148,18 @@ pub async fn execute_sequence(
     ))
 }
 
+#[tauri::command]
+pub fn is_wayland() -> bool {
+    #[cfg(target_os = "linux")]
+    {
+        if let Ok(session_type) = std::env::var("XDG_SESSION_TYPE") {
+            if session_type.to_lowercase() == "wayland" {
+                return true;
+            }
+        }
+        if std::env::var("WAYLAND_DISPLAY").is_ok() {
+            return true;
+        }
+    }
+    false
+}
