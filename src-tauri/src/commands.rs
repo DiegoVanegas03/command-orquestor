@@ -104,6 +104,7 @@ pub async fn execute_sequence(
     enviroment: String,
     // PID del proceso destino. None = sin foco (sandbox o no configurado).
     target_pid: Option<u32>,
+    enable_enter: bool,
 ) -> Result<String, String> {
     let mut enigo = Enigo::new(&Settings::default()).map_err(|e| e.to_string())?;
 
@@ -114,13 +115,18 @@ pub async fn execute_sequence(
         thread::sleep(Duration::from_millis(500));
     }
 
-    // Sanitización: separamos los comandos por saltos de línea y por '&&'
-    let sanitized_commands: Vec<String> = command
-        .split('\n')
-        .flat_map(|s| s.split("&&"))
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty())
-        .collect();
+    // Sanitización: si está habilitado el Enter, separamos por saltos de línea y por '&&'
+    // Si no, enviamos el comando tal cual (con sus &&) como una sola secuencia.
+    let sanitized_commands: Vec<String> = if enable_enter {
+        command
+            .split('\n')
+            .flat_map(|s| s.split("&&"))
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect()
+    } else {
+        vec![command.to_string()]
+    };
 
     for cmd in &sanitized_commands {
         // Guardamos el comando en la BD
@@ -135,8 +141,10 @@ pub async fn execute_sequence(
             thread::sleep(Duration::from_millis(speed));
         }
 
-        // Ejecutamos cada comando con Enter
-        let _ = enigo.key(Key::Return, Direction::Click);
+        // Ejecutamos cada comando con Enter si está activado
+        if enable_enter {
+            let _ = enigo.key(Key::Return, Direction::Click);
+        }
 
         // Pequeña pausa entre comandos
         thread::sleep(Duration::from_millis(100));

@@ -11,6 +11,7 @@ import { commandsService } from '@/services/commands'
 import { useConfigStore } from '@/stores/useConfigStore'
 import SettingsCard from '@/components/SettingsCard'
 import ConsoleEntryLine from '@/components/ConsoleEntryLine'
+import Divisor from '@/components/shared/Divisor'
 
 export const Route = createFileRoute('/')({
   component: Dashboard,
@@ -31,8 +32,15 @@ function Dashboard() {
     setHistory(updated)
   }
 
-  const { typingSpeed, environment, attachedProcess, executionMode, manualDelay, changeConfig } =
-    useConfigStore()
+  const {
+    typingSpeed,
+    environment,
+    attachedProcess,
+    executionMode,
+    manualDelay,
+    enableEnterKey,
+    changeConfig,
+  } = useConfigStore()
 
   const [command, setCommand] = useState('')
   const [countdown, setCountdown] = useState<number | null>(null)
@@ -70,6 +78,10 @@ function Dashboard() {
   const handleManualDelayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value
     changeConfig({ manualDelay: val === '' ? '' : Number(val) })
+  }
+
+  const handleEnterOnEndChange = () => {
+    changeConfig({ enableEnterKey: !enableEnterKey })
   }
 
   const { entries, log, clear } = useConsoleStore()
@@ -119,7 +131,13 @@ function Dashboard() {
 
     try {
       const speed = Number(typingSpeed) || 50
-      const result = await commandsService.executeSequence(command, speed, environment, pid)
+      const result = await commandsService.executeSequence(
+        command,
+        speed,
+        environment,
+        pid,
+        enableEnterKey,
+      )
       if (result.success) {
         log('ok', `✓ ${result.message}`)
         await refreshHistory() // Actualizar timeline tras ejecución exitosa
@@ -146,7 +164,7 @@ function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Area: Terminal Panel (col-span-8) */}
-        <div className="lg:col-span-8 flex flex-col h-full min-h-[600px] max-h-screen">
+        <div className="lg:col-span-8 flex flex-col h-full min-h-[600px] max-h-[75vh]">
           <div className="flex-1 flex flex-col bg-carbon-black-300/40 backdrop-blur-xl rounded-xl p-2 relative overflow-hidden ring-1 ring-white/10">
             {/* Terminal Header Bar */}
             <div className="flex items-center justify-between px-4 py-3 bg-carbon-black-100/50 rounded-t-lg mb-2">
@@ -226,6 +244,8 @@ function Dashboard() {
               />
             </div>
 
+            <Divisor className="mb-8" />
+
             {/* Target Window Card / Manual Config */}
             <div className="mb-6 flex-1 flex flex-col gap-4">
               {environment === 'production' && (
@@ -235,11 +255,11 @@ function Dashboard() {
                   </label>
                   <ToggleButtonGroup
                     options={[
-                      { 
-                        value: 'automatic', 
-                        label: isWayland ? 'Automático (No Soportado)' : 'Automático', 
+                      {
+                        value: 'automatic',
+                        label: isWayland ? 'Automático (No Soportado)' : 'Automático',
                         icon: 'auto_awesome',
-                        disabled: isWayland 
+                        disabled: isWayland,
                       },
                       { value: 'manual', label: 'Manual', icon: 'pan_tool' },
                     ]}
@@ -248,7 +268,8 @@ function Dashboard() {
                   />
                   {isWayland && (
                     <p className="text-red-400 text-xs mt-2 font-mono tracking-wide">
-                      El modo automático está deshabilitado debido a restricciones de Wayland en Linux.
+                      El modo automático está deshabilitado debido a restricciones de Wayland en
+                      Linux.
                     </p>
                   )}
                 </div>
@@ -312,9 +333,9 @@ function Dashboard() {
                       min={1}
                       max={60}
                     />
-                    <p className="text-caption text-pale-slate tracking-widest uppercase mt-1">
+                    <small className="text-caption text-pale-slate tracking-widest mt-1">
                       Tiempo para cambiar a la ventana destino.
-                    </p>
+                    </small>
                   </div>
                 )
               ) : (
@@ -339,7 +360,41 @@ function Dashboard() {
               )}
             </div>
 
+            <Divisor className="my-4" />
+
             <SpeedSlider initialValue={Number(typingSpeed) || 0} onChange={handleSpeedChange} />
+
+            <div
+              className="flex items-center gap-3 w-full mb-6 mt-2 cursor-pointer group"
+              onClick={handleEnterOnEndChange}
+            >
+              <div
+                className={`w-6 h-6 shrink-0 rounded-[4px] p-2 flex items-center justify-center border transition-colors ${
+                  enableEnterKey
+                    ? 'bg-bright-snow border-bright-snow text-carbon-black'
+                    : 'bg-transparent border-pale-slate/40 text-transparent group-hover:border-pale-slate'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[12px] font-bold">check</span>
+              </div>
+              <small
+                className={`text-body-sm transition-colors select-none flex items-center gap-1.5 ${
+                  enableEnterKey
+                    ? 'text-bright-snow'
+                    : 'text-pale-slate group-hover:text-bright-snow'
+                }`}
+              >
+                <kbd
+                  className={`bg-carbon-black-600 border border-white/10 rounded px-1.5 py-0.5 text-[10px] font-mono text-bright-snow flex items-center gap-1 shadow-sm transition-opacity ${
+                    enableEnterKey ? 'opacity-100' : 'opacity-50 group-hover:opacity-100'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[10px]">keyboard_return</span>
+                  Enter
+                </kbd>
+                al terminar escritura
+              </small>
+            </div>
 
             <ExecutionButton disabled={executionButtonDisabled} onClick={handleExecution} />
           </div>

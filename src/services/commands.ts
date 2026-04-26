@@ -14,13 +14,14 @@ export const commandsService = {
    * @param enviroment Entorno de ejecución (ej. production, staging)
    * @param targetPid (Opcional) PID del proceso donde enfocar antes de escribir
    */
-  async executeSequence(command: string, speed: number, enviroment: string, targetPid?: number): Promise<CommandResponse> {
+  async executeSequence(command: string, speed: number, enviroment: string, targetPid?: number, enableEnter: boolean = true): Promise<CommandResponse> {
     try {
       const result = await invoke<string>('execute_sequence', {
         command,
         speed,
         enviroment,
         targetPid: targetPid ?? null,
+        enableEnter,
       });
       
       return { success: true, message: result };

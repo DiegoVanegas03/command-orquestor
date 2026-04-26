@@ -6,7 +6,7 @@ export type Environment = 'production' | 'sandbox'
 
 interface ShortCutType {
   type: 'pause' | 'stop'
-  keys: Set<string>
+  keys: string[]
 }
 
 interface AppConfig {
@@ -16,6 +16,7 @@ interface AppConfig {
   attachedProcess: WindowData | null
   executionMode: 'automatic' | 'manual'
   manualDelay: number | ''
+  enableEnterKey: boolean
 }
 
 interface ConfigStore extends AppConfig {
@@ -38,12 +39,13 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
   typingSpeed: 50,
   environment: 'production',
   globalShortcuts: [
-    { type: 'pause', keys: new Set([]) },
-    { type: 'stop', keys: new Set([]) },
+    { type: 'pause', keys: [] },
+    { type: 'stop', keys: [] },
   ],
   attachedProcess: null,
   executionMode: 'automatic',
   manualDelay: 5,
+  enableEnterKey: true,
 
   changeConfig: (config) => set((state) => ({ ...state, ...config })),
 
@@ -56,6 +58,7 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
       const globalShortcuts = await store.get<ShortCutType[]>('globalShortcuts')
       const executionMode = await store.get<'automatic' | 'manual'>('executionMode')
       const manualDelay = await store.get<number>('manualDelay')
+      const enableEnterKey = await store.get<boolean>('enableEnterKey')
 
       set((state) => ({
         typingSpeed:
@@ -64,12 +67,18 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
           environment !== null && environment !== undefined ? environment : state.environment,
         globalShortcuts:
           globalShortcuts !== null && globalShortcuts !== undefined
-            ? globalShortcuts
+            ? globalShortcuts.map(s => ({ ...s, keys: Array.isArray(s.keys) ? s.keys : [] }))
             : state.globalShortcuts,
         executionMode:
-          executionMode !== null && executionMode !== undefined ? executionMode : state.executionMode,
+          executionMode !== null && executionMode !== undefined
+            ? executionMode
+            : state.executionMode,
         manualDelay:
           manualDelay !== null && manualDelay !== undefined ? manualDelay : state.manualDelay,
+        enableEnterKey:
+          enableEnterKey !== null && enableEnterKey !== undefined
+            ? enableEnterKey
+            : state.enableEnterKey,
       }))
     } catch (e) {
       console.error('Failed to load config from Rust store:', e)
@@ -85,6 +94,7 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
       await store.set('globalShortcuts', state.globalShortcuts)
       await store.set('executionMode', state.executionMode)
       await store.set('manualDelay', state.manualDelay)
+      await store.set('enableEnterKey', state.enableEnterKey)
       await store.save()
     } catch (e) {
       console.error('Failed to save config to Rust store:', e)

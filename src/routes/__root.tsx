@@ -5,6 +5,7 @@ import { Modal } from '@/components/shared/Modal'
 import { useEffect } from 'react'
 import { useConfigStore } from '@/stores/useConfigStore'
 import { useConsoleStore } from '@/stores/useConsoleStore'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -29,6 +30,26 @@ function RootComponent() {
       log('warn', '→ No se pudo cargar la configuración guardada. Usando valores por defecto.')
       log('exec', 'Listo para la secuencia de comandos.')
     })
+
+    // Listen to window close request
+    let unlisten: (() => void) | null = null
+    getCurrentWindow()
+      .onCloseRequested(async (event) => {
+        event.preventDefault()
+        // 1. Guardar el estado
+        await useConfigStore.getState().saveToRust()
+        // 2. Dejar de escuchar el evento para no caer en bucle
+        if (unlisten) unlisten()
+        // 3. Cerrar la ventana nativamente
+        await getCurrentWindow().close()
+      })
+      .then((fn) => {
+        unlisten = fn
+      })
+
+    return () => {
+      if (unlisten) unlisten()
+    }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
