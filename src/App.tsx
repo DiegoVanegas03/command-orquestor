@@ -18,7 +18,16 @@ import { Toaster } from 'sileo'
 function App() {
   return (
     <>
-      <Toaster position="bottom-right" />
+      <Toaster 
+        position="bottom-right" 
+        theme="dark"
+        options={{
+          fill: '#1b1f22', // carbon-black-400 de Tailwind
+          styles: {
+            title: 'text-bright-snow',
+          }
+        }}
+      />
       <RouterProvider router={router} />
     </>
   )

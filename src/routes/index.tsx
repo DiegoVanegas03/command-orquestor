@@ -5,15 +5,23 @@ import { useConsoleStore } from '@/stores/useConsoleStore'
 
 import ToggleButtonGroup from '@/components/shared/ToggleButtonGroup'
 import SpeedSlider from '@/components/shared/SpeedSlider'
-import CommandInput from '@/components/CommandInput'
+import ConsoleInput from '@/components/ConsoleInput'
 import ExecutionButton from '@/components/ExecutionButton'
 import { commandsService } from '@/services/commands'
 import { useConfigStore } from '@/stores/useConfigStore'
 import SettingsCard from '@/components/SettingsCard'
 import ConsoleEntryLine from '@/components/ConsoleEntryLine'
 import Divisor from '@/components/shared/Divisor'
+import { formatDates } from '@/utils/dates'
+
+type DashboardSearch = {
+  cmd?: string
+}
 
 export const Route = createFileRoute('/')({
+  validateSearch: (search: Record<string, unknown>): DashboardSearch => ({
+    cmd: typeof search.cmd === 'string' ? search.cmd : undefined,
+  }),
   component: Dashboard,
   loader: async () => {
     const history = await commandsService.getCommandHistory(15)
@@ -42,9 +50,21 @@ function Dashboard() {
     changeConfig,
   } = useConfigStore()
 
-  const [command, setCommand] = useState('')
+  const { entries, log, clear } = useConsoleStore()
+  
+  const search = Route.useSearch()
+  const navigate = Route.useNavigate()
+
+  const [command, setCommand] = useState(search.cmd || '')
   const [countdown, setCountdown] = useState<number | null>(null)
   const [isWayland, setIsWayland] = useState(false)
+
+  useEffect(() => {
+    if (search.cmd) {
+      setCommand(search.cmd)
+      navigate({ search: { cmd: undefined }, replace: true })
+    }
+  }, [search.cmd, navigate])
 
   useEffect(() => {
     invoke<boolean>('is_wayland')
@@ -84,11 +104,15 @@ function Dashboard() {
     changeConfig({ enableEnterKey: !enableEnterKey })
   }
 
-  const { entries, log, clear } = useConsoleStore()
   const consoleEndRef = useRef<HTMLDivElement>(null)
+  const isMounted = useRef(false)
 
-  // Auto-scroll al fondo cuando llegan nuevas entradas
+  // Auto-scroll solo cuando llegan entradas NUEVAS, no al montar el componente
   useEffect(() => {
+    if (!isMounted.current) {
+      isMounted.current = true
+      return
+    }
     consoleEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [entries])
 
@@ -213,7 +237,7 @@ function Dashboard() {
             </div>
 
             {/* Prompt Input Area */}
-            <CommandInput
+            <ConsoleInput
               value={command}
               onChange={handleCommandChange}
               placeholder="Introduce el comando de ejecución..."
@@ -416,18 +440,8 @@ function Dashboard() {
                   <div className="absolute left-[7px] top-2 bottom-2 w-px bg-white/8 rounded-full" />
 
                   <div className="flex flex-col gap-1">
-                    {history.map((item: any, index: number) => {
-                      const dt = new Date(item.executed_at)
-                      const dateStr = dt.toLocaleDateString('es-MX', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                      })
-                      const timeStr = dt.toLocaleTimeString('es-MX', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: false,
-                      })
+                    {history.map((item, index) => {
+                      const { date, time } = formatDates(item.executed_at)
                       const isFirst = index === 0
 
                       return (
@@ -455,11 +469,11 @@ function Dashboard() {
                             {/* Fecha + hora + entorno */}
                             <div className="flex items-center gap-2 mb-1.5">
                               <span className="text-[10px] font-mono text-pale-slate/50 tracking-wide">
-                                {dateStr}
+                                {date}
                               </span>
                               <span className="text-pale-slate/20 text-[10px]">·</span>
                               <span className="text-[10px] font-mono text-pale-slate/70 font-bold">
-                                {timeStr}
+                                {time}
                               </span>
                               <span className="text-pale-slate/20 text-[10px]">·</span>
                               <span

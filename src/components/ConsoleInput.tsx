@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
 
-interface CommandInputProps {
+interface ConsoleInputProps {
   value: string
   onChange: (value: string) => void
   placeholder?: string
 }
 
-export default function CommandInput({ value, onChange, placeholder }: CommandInputProps) {
+export default function ConsoleInput({ value, onChange, placeholder }: ConsoleInputProps) {
   const [lineCount, setLineCount] = useState(1)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -15,7 +15,7 @@ export default function CommandInput({ value, onChange, placeholder }: CommandIn
       // Reset height to recalculate scrollHeight correctly
       textareaRef.current.style.height = 'auto'
       const scrollHeight = textareaRef.current.scrollHeight
-      
+
       // Cálculo aproximado de líneas basado en scrollHeight
       // Línea base (1 fila) con py-4 (32px) y texto sm (aprox 20px) = 52px
       const currentLines = Math.max(1, Math.floor((scrollHeight - 20) / 20))
@@ -30,10 +30,8 @@ export default function CommandInput({ value, onChange, placeholder }: CommandIn
   return (
     <div className="mt-2 bg-carbon-black-300 rounded-b-lg relative group transition-all duration-300">
       {/* Símbolo de prompt alineado arriba */}
-      <div className="absolute left-4 top-4 text-bright-snow font-bold font-mono">
-        ~$
-      </div>
-      
+      <div className="absolute left-4 top-4 text-bright-snow font-bold font-mono">~$</div>
+
       <textarea
         ref={textareaRef}
         value={value}
@@ -42,10 +40,10 @@ export default function CommandInput({ value, onChange, placeholder }: CommandIn
         placeholder={placeholder}
         rows={1}
       />
-      
+
       {/* Línea de focus inferior */}
       <div className="absolute bottom-0 left-0 w-full h-[2px] bg-bright-snow scale-x-0 group-focus-within:scale-x-100 transition-transform duration-300 origin-left"></div>
-      
+
       {/* Indicador visual opcional del contador de líneas (puedes quitarlo si no lo quieres ver) */}
       <div className="absolute right-4 bottom-2 text-[10px] text-pale-slate/30 font-mono opacity-0 group-hover:opacity-100 transition-opacity">
         L: {lineCount}/4

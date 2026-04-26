@@ -56,11 +56,14 @@ export default function Sidebar() {
               <span className="material-symbols-outlined text-xl">dashboard</span>
               <span className="text-body-md font-medium [&.active]:font-semibold">Panel</span>
             </Link>
-            {/* <Link to="/history" disabled className="flex items-center gap-4 px-8 py-4 text-pale-slate hover:text-bright-snow transition-colors hover:bg-white/5 active:scale-95 duration-200">
+            <Link
+              to="/history"
+              className="flex items-center gap-4 px-8 py-4 text-pale-slate hover:text-bright-snow transition-colors hover:bg-white/5 active:scale-95 duration-200 [&.active]:text-bright-snow [&.active]:border-l-4 [&.active]:border-bright-snow [&.active]:bg-white/10"
+            >
               <span className="material-symbols-outlined text-xl">history</span>
-              <span className="text-body-md font-medium">Historial</span>
+              <span className="text-body-md font-medium [&.active]:font-semibold">Historial</span>
             </Link>
-            <Link to="/flows" disabled className="flex items-center gap-4 px-8 py-4 text-pale-slate hover:text-bright-snow transition-colors hover:bg-white/5 active:scale-95 duration-200">
+            {/* <Link to="/flows" disabled className="flex items-center gap-4 px-8 py-4 text-pale-slate hover:text-bright-snow transition-colors hover:bg-white/5 active:scale-95 duration-200">
               <span className="material-symbols-outlined text-xl">account_tree</span>
               <span className="text-body-md font-medium">Flujos</span>
             </Link> */}

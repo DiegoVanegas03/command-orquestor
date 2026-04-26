@@ -1,9 +1,16 @@
-import { invoke } from '@tauri-apps/api/core';
-import { WindowData } from '@/components/WindowSelectionModalContent';
+import { invoke } from '@tauri-apps/api/core'
+import { WindowData } from '@/components/WindowSelectionModalContent'
+
+export interface CommandRecord {
+  id: number
+  command: string
+  enviroment: string
+  executed_at: string
+}
 
 export interface CommandResponse {
-  success: boolean;
-  message: string;
+  success: boolean
+  message: string
 }
 
 export const commandsService = {
@@ -14,7 +21,13 @@ export const commandsService = {
    * @param enviroment Entorno de ejecución (ej. production, staging)
    * @param targetPid (Opcional) PID del proceso donde enfocar antes de escribir
    */
-  async executeSequence(command: string, speed: number, enviroment: string, targetPid?: number, enableEnter: boolean = true): Promise<CommandResponse> {
+  async executeSequence(
+    command: string,
+    speed: number,
+    enviroment: string,
+    targetPid?: number,
+    enableEnter: boolean = true,
+  ): Promise<CommandResponse> {
     try {
       const result = await invoke<string>('execute_sequence', {
         command,
@@ -22,24 +35,24 @@ export const commandsService = {
         enviroment,
         targetPid: targetPid ?? null,
         enableEnter,
-      });
-      
-      return { success: true, message: result };
+      })
+
+      return { success: true, message: result }
     } catch (error) {
-      console.error('Error al ejecutar la secuencia:', error);
-      return { success: false, message: String(error) };
+      console.error('Error al ejecutar la secuencia:', error)
+      return { success: false, message: String(error) }
     }
   },
 
   /**
    * Obtiene el historial de comandos ejecutados
    */
-  async getCommandHistory(limit?: number): Promise<any[]> {
+  async getCommandHistory(limit?: number): Promise<CommandRecord[]> {
     try {
-      return await invoke('get_commands', { limit });
+      return await invoke('get_commands', { limit })
     } catch (error) {
-      console.error('Error al obtener el historial:', error);
-      return [];
+      console.error('Error al obtener el historial:', error)
+      return []
     }
   },
 
@@ -48,11 +61,10 @@ export const commandsService = {
    */
   async getOpenWindows(): Promise<WindowData[]> {
     try {
-      return await invoke<WindowData[]>('get_open_windows');
+      return await invoke<WindowData[]>('get_open_windows')
     } catch (error) {
-      console.error('Error al obtener ventanas abiertas:', error);
-      return [];
+      console.error('Error al obtener ventanas abiertas:', error)
+      return []
     }
   },
-
-};
+}
