@@ -11,6 +11,7 @@ export const Route = createRootRoute({
   notFoundComponent: () => <div>404</div>,
 })
 
+
 function RootComponent() {
   const loadConfig = useConfigStore((state) => state.loadConfig)
   const log = useConsoleStore((state) => state.log)
@@ -32,6 +33,7 @@ function RootComponent() {
 
   return (
     <div className="bg-carbon-black-500 text-bright-snow font-roboto antialiased h-screen overflow-hidden flex selection:bg-carbon-black-700 selection:text-bright-snow">
+
       {/* SideNavBar */}
       <Sidebar />
 

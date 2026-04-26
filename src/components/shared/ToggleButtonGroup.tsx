@@ -4,6 +4,7 @@ export interface ToggleOption {
   value: string
   label: string
   icon?: string
+  disabled?: boolean
 }
 
 interface ToggleButtonGroupProps {
@@ -17,9 +18,10 @@ export default function ToggleButtonGroup({ options, value, onChange }: ToggleBu
   const [internalValue, setInternalValue] = useState(value ?? options[0]?.value)
   const currentValue = value !== undefined ? value : internalValue
 
-  const handleSelect = (val: string) => {
-    setInternalValue(val)
-    onChange?.(val)
+  const handleSelect = (option: ToggleOption) => {
+    if (option.disabled) return;
+    setInternalValue(option.value)
+    onChange?.(option.value)
   }
 
   return (
@@ -29,9 +31,12 @@ export default function ToggleButtonGroup({ options, value, onChange }: ToggleBu
         return (
           <button
             key={option.value}
-            onClick={() => handleSelect(option.value)}
-            className={`relative text-body-md transition-all   shadow-2xs flex items-center justify-center gap-2 py-2 rounded-lg overflow-hidden ${
-              isActive
+            onClick={() => handleSelect(option)}
+            disabled={option.disabled}
+            className={`relative text-body-md transition-all shadow-2xs flex items-center justify-center gap-2 py-2 rounded-lg overflow-hidden ${
+              option.disabled
+                ? 'opacity-50 cursor-not-allowed bg-carbon-black-300/50 text-pale-slate/50'
+                : isActive
                 ? 'bg-carbon-black-400 text-bright-snow '
                 : 'text-pale-slate hover:bg-carbon-black-300'
             }`}
@@ -39,7 +44,7 @@ export default function ToggleButtonGroup({ options, value, onChange }: ToggleBu
             {/* Indicador lateral */}
             <div
               className={`absolute left-0 top-0 bottom-0 w-[4px] transition-colors  ${
-                isActive ? 'bg-bright-snow' : 'transparent'
+                isActive && !option.disabled ? 'bg-bright-snow' : 'transparent'
               }`}
             />
             {option.icon && (

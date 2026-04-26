@@ -6,7 +6,6 @@ export interface CommandResponse {
   message: string;
 }
 
-
 export const commandsService = {
   /**
    * Ejecuta una secuencia de comandos automatizada mediante simulación de teclado
@@ -53,5 +52,6 @@ export const commandsService = {
       console.error('Error al obtener ventanas abiertas:', error);
       return [];
     }
-  }
+  },
+
 };

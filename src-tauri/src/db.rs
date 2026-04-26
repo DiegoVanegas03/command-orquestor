@@ -15,8 +15,8 @@ pub struct CommandRecord {
     executed_at: String,
 }
 
-pub fn init_db() -> Result<Connection> {
-    let conn = Connection::open("command_history.db")?;
+pub fn init_db<P: AsRef<std::path::Path>>(path: P) -> Result<Connection> {
+    let conn = Connection::open(path)?;
     
     conn.execute(
         "CREATE TABLE IF NOT EXISTS commands (

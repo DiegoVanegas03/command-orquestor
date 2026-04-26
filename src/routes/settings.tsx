@@ -15,7 +15,7 @@ function Settings() {
   const { attachedProcess, typingSpeed, globalShortcuts, changeConfig } = useConfigStore()
 
   const stopShortcut = globalShortcuts.find((s) => s.type === 'stop')
-  const pauseShortcut = globalShortcuts.find((s) => s.type === 'pause')
+  //const pauseShortcut = globalShortcuts.find((s) => s.type === 'pause')
 
   const handleSearchActiveWindows = () => {
     openModal('Selección de ventana', <WindowSelectionModalContent />, {
@@ -24,7 +24,8 @@ function Settings() {
   }
 
   const handleChangeTypingSpeed = (event: React.ChangeEvent<HTMLInputElement>) => {
-    changeConfig({ typingSpeed: Number(event.target.value) })
+    const val = event.target.value
+    changeConfig({ typingSpeed: val === '' ? '' : Number(val) })
   }
 
   return (

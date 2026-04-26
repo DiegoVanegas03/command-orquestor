@@ -13,44 +13,30 @@ pub struct WindowData {
     pub app_name: String,
 }
 
-/// Obtiene la lista de ventanas activas del sistema operativo.
-/// 
-/// **Notas sobre Permisos del Sistema Operativo:**
-/// - **macOS:** A partir de macOS Catalina (10.15), para listar ventanas de *otras* aplicaciones, 
-///   la aplicación (o terminal ejecutando el entorno de desarrollo) requiere permisos de 
-///   "Grabación de Pantalla" (Screen Recording) y opcionalmente "Accesibilidad" en las preferencias 
-///   de Privacidad y Seguridad. Si no se otorgan, solo devolverá las ventanas de la propia app.
-/// - **Windows:** No requiere permisos especiales.
-/// - **Linux:** Generalmente funciona sin permisos extra en X11, pero en Wayland podría 
-///   estar más restringido por la seguridad del protocolo.
 #[tauri::command]
 pub fn get_open_windows() -> Result<Vec<WindowData>, String> {
     let windows = x_win::get_open_windows().map_err(|e| e.to_string())?;
+    map_x_win_results(windows)
+}
 
-    let mut result = Vec::new();
-    for w in windows {
-        if !w.title.is_empty() {
-            result.push(WindowData {
-                id: w.id,
-                process_id: w.info.process_id,
-                title: w.title,
-                app_name: w.info.name,
-            });
-        }
-    }
+/// Convierte los resultados de `x-win` al formato interno `WindowData`.
+/// Usado en macOS, Windows y Linux X11/GNOME.
+fn map_x_win_results(windows: Vec<x_win::WindowInfo>) -> Result<Vec<WindowData>, String> {
+    let result = windows
+        .into_iter()
+        .filter(|w| !w.title.is_empty())
+        .map(|w| WindowData {
+            id: w.id,
+            process_id: w.info.process_id,
+            title: w.title,
+            app_name: w.info.name,
+        })
+        .collect();
     Ok(result)
 }
 
-/// Enfoca una ventana del sistema operativo utilizando su PID (Process ID).
-///
-/// Usar el PID es más preciso que el nombre de app: evita colisiones con
-/// procesos que comparten nombre y permite identificar instancias específicas.
-///
-/// - **macOS:** usa AppleScript a través de `System Events` para buscar el
-///   proceso cuyo `unix id` coincida con el PID y llevarlo al frente.
-/// - **Windows:** usa PowerShell para traer al frente el proceso por su ID.
-/// - **Linux (X11):** usa `xdotool` para buscar ventanas del PID y hacer foco.
 fn focus_window_by_pid(pid: u32) -> Result<(), String> {
+    // ── macOS ──────────────────────────────────────────────────────────────
     #[cfg(target_os = "macos")]
     {
         let script = format!(
@@ -71,20 +57,21 @@ fn focus_window_by_pid(pid: u32) -> Result<(), String> {
             return Err(format!("osascript error: {}", err));
         }
     }
+
+    // ── Windows ────────────────────────────────────────────────────────────
     #[cfg(target_os = "windows")]
     {
-        // Obtener el HWND del proceso por PID y llevarlo al frente via PowerShell
         let script = format!(
             "Add-Type @'\n\
-             using System;\n\
-             using System.Runtime.InteropServices;\n\
-             public class Win32 {{\n\
-               [DllImport(\"user32.dll\")] public static extern bool SetForegroundWindow(IntPtr hWnd);\n\
-               [DllImport(\"user32.dll\")] public static extern IntPtr GetForegroundWindow();\n\
-             }}\n\
-             '@\n\
-             $proc = Get-Process -Id {0} -ErrorAction SilentlyContinue\n\
-             if ($proc) {{ [Win32]::SetForegroundWindow($proc.MainWindowHandle) }}",
+              using System;\n\
+              using System.Runtime.InteropServices;\n\
+              public class Win32 {{\n\
+                [DllImport(\"user32.dll\")] public static extern bool SetForegroundWindow(IntPtr hWnd);\n\
+                [DllImport(\"user32.dll\")] public static extern IntPtr GetForegroundWindow();\n\
+              }}\n\
+              '@\n\
+              $proc = Get-Process -Id {0} -ErrorAction SilentlyContinue\n\
+              if ($proc) {{ [Win32]::SetForegroundWindow($proc.MainWindowHandle) }}",
             pid
         );
         std::process::Command::new("powershell")
@@ -92,16 +79,22 @@ fn focus_window_by_pid(pid: u32) -> Result<(), String> {
             .output()
             .map_err(|e| e.to_string())?;
     }
+
+    // ── Linux (X11) ───────────────────────────────────────────────────────
     #[cfg(target_os = "linux")]
     {
-        // xdotool busca todas las ventanas del PID y activa la primera
         std::process::Command::new("xdotool")
             .args(["search", "--pid", &pid.to_string(), "windowfocus", "--sync"])
             .output()
             .map_err(|e| format!("xdotool error (¿instalado?): {}", e))?;
     }
+
     Ok(())
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// execute_sequence — Comando Tauri principal (sin cambios en lógica)
+// ─────────────────────────────────────────────────────────────────────────────
 
 #[tauri::command]
 pub async fn execute_sequence(
@@ -153,4 +146,20 @@ pub async fn execute_sequence(
         "Secuencia completada con {} comandos.",
         sanitized_commands.len()
     ))
+}
+
+#[tauri::command]
+pub fn is_wayland() -> bool {
+    #[cfg(target_os = "linux")]
+    {
+        if let Ok(session_type) = std::env::var("XDG_SESSION_TYPE") {
+            if session_type.to_lowercase() == "wayland" {
+                return true;
+            }
+        }
+        if std::env::var("WAYLAND_DISPLAY").is_ok() {
+            return true;
+        }
+    }
+    false
 }
