@@ -24,7 +24,8 @@ function Settings() {
   }
 
   const handleChangeTypingSpeed = (event: React.ChangeEvent<HTMLInputElement>) => {
-    changeConfig({ typingSpeed: Number(event.target.value) })
+    const val = event.target.value
+    changeConfig({ typingSpeed: val === '' ? '' : Number(val) })
   }
 
   return (

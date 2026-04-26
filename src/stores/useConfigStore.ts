@@ -10,10 +10,12 @@ interface ShortCutType {
 }
 
 interface AppConfig {
-  typingSpeed: number
+  typingSpeed: number | ''
   environment: Environment
   globalShortcuts: ShortCutType[]
   attachedProcess: WindowData | null
+  executionMode: 'automatic' | 'manual'
+  manualDelay: number | ''
 }
 
 interface ConfigStore extends AppConfig {
@@ -40,6 +42,8 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
     { type: 'stop', keys: new Set([]) },
   ],
   attachedProcess: null,
+  executionMode: 'automatic',
+  manualDelay: 5,
 
   changeConfig: (config) => set((state) => ({ ...state, ...config })),
 
@@ -50,6 +54,8 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
       const typingSpeed = await store.get<number>('typingSpeed')
       const environment = await store.get<Environment>('environment')
       const globalShortcuts = await store.get<ShortCutType[]>('globalShortcuts')
+      const executionMode = await store.get<'automatic' | 'manual'>('executionMode')
+      const manualDelay = await store.get<number>('manualDelay')
 
       set((state) => ({
         typingSpeed:
@@ -60,6 +66,10 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
           globalShortcuts !== null && globalShortcuts !== undefined
             ? globalShortcuts
             : state.globalShortcuts,
+        executionMode:
+          executionMode !== null && executionMode !== undefined ? executionMode : state.executionMode,
+        manualDelay:
+          manualDelay !== null && manualDelay !== undefined ? manualDelay : state.manualDelay,
       }))
     } catch (e) {
       console.error('Failed to load config from Rust store:', e)
@@ -73,6 +83,8 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
       await store.set('typingSpeed', state.typingSpeed)
       await store.set('environment', state.environment)
       await store.set('globalShortcuts', state.globalShortcuts)
+      await store.set('executionMode', state.executionMode)
+      await store.set('manualDelay', state.manualDelay)
       await store.save()
     } catch (e) {
       console.error('Failed to save config to Rust store:', e)

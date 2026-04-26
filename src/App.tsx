@@ -18,7 +18,7 @@ import { Toaster } from 'sileo'
 function App() {
   return (
     <>
-      <Toaster position="top-right" />
+      <Toaster position="bottom-right" />
       <RouterProvider router={router} />
     </>
   )
