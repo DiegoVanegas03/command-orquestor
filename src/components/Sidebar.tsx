@@ -11,7 +11,7 @@ export default function Sidebar() {
       {/* Mobile Hamburger Button */}
       <button
         onClick={toggleOpen}
-        className="md:hidden fixed top-2 left-4 z-50 p-2 bg-carbon-black-300 text-bright-snow rounded-lg shadow-lg hover:bg-carbon-black-400 transition-colors"
+        className="xl:hidden fixed top-2 left-4 z-50 p-2 bg-carbon-black-300 text-bright-snow rounded-lg shadow-lg hover:bg-carbon-black-400 transition-colors"
       >
         <span className="material-symbols-outlined">menu</span>
       </button>
@@ -19,7 +19,7 @@ export default function Sidebar() {
       {/* Mobile Overlay */}
       {isOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm transition-opacity"
+          className="xl:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm transition-opacity"
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -27,14 +27,14 @@ export default function Sidebar() {
       {/* Sidebar */}
       <nav
         className={`h-screen w-64 fixed left-0 top-0 bg-slate-900/60 backdrop-blur-xl shadow-[20px_0_40px_rgba(0,0,0,0.4)] z-50 transition-transform duration-300
-        ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        ${isOpen ? 'translate-x-0' : '-translate-x-full xl:translate-x-0'}
       `}
       >
         <div className="flex flex-col h-full py-8 tracking-tight relative">
           {/* Close button inside sidebar for mobile */}
           <button
             onClick={toggleOpen}
-            className="md:hidden absolute top-4 right-4 p-2 text-pale-slate hover:text-bright-snow transition-colors"
+            className="xl:hidden absolute top-4 right-4 p-2 text-pale-slate hover:text-bright-snow transition-colors"
           >
             <span className="material-symbols-outlined">close</span>
           </button>

@@ -38,7 +38,7 @@ function RootComponent() {
       <Sidebar />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full pl-0 md:pl-64 transition-all duration-300">
+      <div className="flex-1 flex flex-col h-full pl-0 xl:pl-64 transition-all duration-300">
         {/* TopNavBar */}
         <TopNavBar />
 

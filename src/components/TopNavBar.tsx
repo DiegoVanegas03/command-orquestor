@@ -38,7 +38,7 @@ export default function TopNavBar() {
   }
 
   return (
-    <header className="fixed top-0 right-0 w-full md:w-[calc(100%-16rem)] h-16 bg-carbon-black z-40 border-b border-white/5 transition-all duration-300">
+    <header className="fixed top-0 right-0 w-full xl:w-[calc(100%-16rem)] h-16 bg-carbon-black z-40 border-b border-white/5 transition-all duration-300">
       <div className="flex items-center justify-between px-12 h-full gap-6">
         <div className="flex-1"></div>
 
@@ -68,7 +68,9 @@ export default function TopNavBar() {
           >
             <span
               className={`material-symbols-outlined text-[18px] transition-transform duration-300 ${
-                isPinned ? 'rotate-0 text-bright-snow drop-shadow-[0_0_6px_rgba(255,255,255,0.7)]' : 'group-hover:rotate-12'
+                isPinned
+                  ? 'rotate-0 text-bright-snow drop-shadow-[0_0_6px_rgba(255,255,255,0.7)]'
+                  : 'group-hover:rotate-12'
               }`}
             >
               push_pin
